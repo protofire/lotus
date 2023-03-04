@@ -2,6 +2,7 @@ package blockstore
 
 import (
 	"context"
+	"time"
 
 	"github.com/ipfs/go-cid"
 	ds "github.com/ipfs/go-datastore"
@@ -52,6 +53,10 @@ type BlockstoreGCOptions struct {
 	FullGC bool
 	// fraction of garbage in badger vlog before its worth processing in online GC
 	Threshold float64
+	// how often to call the check function
+	CheckFreq time.Duration
+	// function to call periodically to pause or early terminate GC
+	Check func() error
 }
 
 func WithFullGC(fullgc bool) BlockstoreGCOption {
@@ -64,6 +69,20 @@ func WithFullGC(fullgc bool) BlockstoreGCOption {
 func WithThreshold(threshold float64) BlockstoreGCOption {
 	return func(opts *BlockstoreGCOptions) error {
 		opts.Threshold = threshold
+		return nil
+	}
+}
+
+func WithCheckFreq(f time.Duration) BlockstoreGCOption {
+	return func(opts *BlockstoreGCOptions) error {
+		opts.CheckFreq = f
+		return nil
+	}
+}
+
+func WithCheck(check func() error) BlockstoreGCOption {
+	return func(opts *BlockstoreGCOptions) error {
+		opts.Check = check
 		return nil
 	}
 }
