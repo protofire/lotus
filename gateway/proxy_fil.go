@@ -143,7 +143,7 @@ func (gw *Node) ChainNotify(ctx context.Context) (<-chan []*api.HeadChange, erro
 	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
 		return nil, err
 	}
-	return gw.target.ChainNotify(ctx)
+	return nil, xerrors.New("method 'Filecoin.ChainNotify' not allowed")
 }
 
 func (gw *Node) ChainGetPath(ctx context.Context, from, to types.TipSetKey) ([]*api.HeadChange, error) {
