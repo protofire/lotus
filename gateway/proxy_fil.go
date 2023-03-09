@@ -34,6 +34,36 @@ func (gw *Node) Version(ctx context.Context) (api.APIVersion, error) {
 	return gw.target.Version(ctx)
 }
 
+func (gw *Node) StateReplay(ctx context.Context, tsk types.TipSetKey, c cid.Cid) (*api.InvocResult, error) {
+	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
+		return nil, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return nil, err
+	}
+	return gw.target.StateReplay(ctx, tsk, c)
+}
+
+func (gw *Node) GasEstimateGasPremium(ctx context.Context, nblocksincl uint64, sender address.Address, gaslimit int64, tsk types.TipSetKey) (types.BigInt, error) {
+	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
+		return types.BigInt{}, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return types.BigInt{}, err
+	}
+	return gw.target.GasEstimateGasPremium(ctx, nblocksincl, sender, gaslimit, tsk)
+}
+
+func (gw *Node) StateMinerSectorCount(ctx context.Context, m address.Address, tsk types.TipSetKey) (api.MinerSectors, error) {
+	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
+		return api.MinerSectors{}, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return api.MinerSectors{}, err
+	}
+	return gw.target.StateMinerSectorCount(ctx, m, tsk)
+}
+
 func (gw *Node) ChainGetParentMessages(ctx context.Context, c cid.Cid) ([]api.Message, error) {
 	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
 		return nil, err
