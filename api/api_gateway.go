@@ -14,8 +14,8 @@ import (
 
 	apitypes "github.com/filecoin-project/lotus/api/types"
 	"github.com/filecoin-project/lotus/chain/types"
-	"github.com/filecoin-project/lotus/node/modules/dtypes"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
+	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
 
 //                       MODIFYING THE API INTERFACE
@@ -33,22 +33,24 @@ import (
 //  * Generate openrpc blobs
 
 type Gateway interface {
-	ChainHasObj(context.Context, cid.Cid) (bool, error)
-	ChainPutObj(context.Context, blocks.Block) error
-	ChainHead(ctx context.Context) (*types.TipSet, error)
+	ChainGetBlockMessages(context.Context, cid.Cid) (*BlockMessages, error)
+	ChainGetGenesis(context.Context) (*types.TipSet, error)
+	ChainGetMessage(ctx context.Context, mc cid.Cid) (*types.Message, error)
 	ChainGetParentMessages(context.Context, cid.Cid) ([]Message, error)
 	ChainGetParentReceipts(context.Context, cid.Cid) ([]*types.MessageReceipt, error)
-	ChainGetBlockMessages(context.Context, cid.Cid) (*BlockMessages, error)
-	ChainGetMessage(ctx context.Context, mc cid.Cid) (*types.Message, error)
 	ChainGetPath(ctx context.Context, from, to types.TipSetKey) ([]*HeadChange, error)
 	ChainGetTipSet(ctx context.Context, tsk types.TipSetKey) (*types.TipSet, error)
-	ChainGetTipSetByHeight(ctx context.Context, h abi.ChainEpoch, tsk types.TipSetKey) (*types.TipSet, error)
 	ChainGetTipSetAfterHeight(ctx context.Context, h abi.ChainEpoch, tsk types.TipSetKey) (*types.TipSet, error)
+	ChainGetTipSetByHeight(ctx context.Context, h abi.ChainEpoch, tsk types.TipSetKey) (*types.TipSet, error)
+	ChainHasObj(context.Context, cid.Cid) (bool, error)
+	ChainHead(ctx context.Context) (*types.TipSet, error)
 	ChainNotify(context.Context) (<-chan []*HeadChange, error)
+	ChainPutObj(context.Context, blocks.Block) error
 	ChainReadObj(context.Context, cid.Cid) ([]byte, error)
-	ChainGetGenesis(context.Context) (*types.TipSet, error)
+	Discover(context.Context) (apitypes.OpenRPCDocument, error)
+	GasEstimateGasPremium(context.Context, uint64, address.Address, int64, types.TipSetKey) (types.BigInt, error)
 	GasEstimateMessageGas(ctx context.Context, msg *types.Message, spec *MessageSendSpec, tsk types.TipSetKey) (*types.Message, error)
-    MpoolGetNonce(ctx context.Context, addr address.Address) (uint64, error)
+	MpoolGetNonce(ctx context.Context, addr address.Address) (uint64, error)
 	MpoolPush(ctx context.Context, sm *types.SignedMessage) (cid.Cid, error)
 	MsigGetAvailableBalance(ctx context.Context, addr address.Address, tsk types.TipSetKey) (types.BigInt, error)
 	MsigGetPending(context.Context, address.Address, types.TipSetKey) ([]*MsigTransaction, error)
@@ -59,23 +61,24 @@ type Gateway interface {
 	StateDealProviderCollateralBounds(ctx context.Context, size abi.PaddedPieceSize, verified bool, tsk types.TipSetKey) (DealCollateralBounds, error)
 	StateDecodeParams(ctx context.Context, toAddr address.Address, method abi.MethodNum, params []byte, tsk types.TipSetKey) (interface{}, error)
 	StateGetActor(ctx context.Context, actor address.Address, ts types.TipSetKey) (*types.Actor, error)
-	StateReadState(ctx context.Context, actor address.Address, tsk types.TipSetKey) (*ActorState, error)
 	StateListMiners(ctx context.Context, tsk types.TipSetKey) ([]address.Address, error)
 	StateLookupID(ctx context.Context, addr address.Address, tsk types.TipSetKey) (address.Address, error)
 	StateMarketBalance(ctx context.Context, addr address.Address, tsk types.TipSetKey) (MarketBalance, error)
 	StateMarketStorageDeal(ctx context.Context, dealId abi.DealID, tsk types.TipSetKey) (*MarketDeal, error)
 	StateMinerInfo(ctx context.Context, actor address.Address, tsk types.TipSetKey) (MinerInfo, error)
-	StateMinerProvingDeadline(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*dline.Info, error)
 	StateMinerPower(context.Context, address.Address, types.TipSetKey) (*MinerPower, error)
+	StateMinerProvingDeadline(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*dline.Info, error)
+	StateMinerSectorCount(context.Context, address.Address, types.TipSetKey) (MinerSectors, error)
 	StateNetworkName(ctx context.Context) (dtypes.NetworkName, error)
 	StateNetworkVersion(context.Context, types.TipSetKey) (apitypes.NetworkVersion, error)
+	StateReadState(ctx context.Context, actor address.Address, tsk types.TipSetKey) (*ActorState, error)
+	StateReplay(context.Context, types.TipSetKey, cid.Cid) (*InvocResult, error)
+	StateSearchMsg(ctx context.Context, from types.TipSetKey, msg cid.Cid, limit abi.ChainEpoch, allowReplaced bool) (*MsgLookup, error)
 	StateSectorGetInfo(ctx context.Context, maddr address.Address, n abi.SectorNumber, tsk types.TipSetKey) (*miner.SectorOnChainInfo, error)
 	StateVerifiedClientStatus(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*abi.StoragePower, error)
-	StateSearchMsg(ctx context.Context, from types.TipSetKey, msg cid.Cid, limit abi.ChainEpoch, allowReplaced bool) (*MsgLookup, error)
 	StateWaitMsg(ctx context.Context, cid cid.Cid, confidence uint64, limit abi.ChainEpoch, allowReplaced bool) (*MsgLookup, error)
-	WalletBalance(context.Context, address.Address) (types.BigInt, error)
 	Version(context.Context) (APIVersion, error)
-	Discover(context.Context) (apitypes.OpenRPCDocument, error)
+	WalletBalance(context.Context, address.Address) (types.BigInt, error)
 
 	EthAccounts(ctx context.Context) ([]ethtypes.EthAddress, error)
 	EthBlockNumber(ctx context.Context) (ethtypes.EthUint64, error)

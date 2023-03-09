@@ -18,7 +18,6 @@ import (
 	"github.com/filecoin-project/go-state-types/network"
 
 	"github.com/filecoin-project/lotus/api"
-	"github.com/filecoin-project/lotus/node/modules/dtypes"
 	"github.com/filecoin-project/lotus/build"
 	"github.com/filecoin-project/lotus/chain/actors/builtin/miner"
 	"github.com/filecoin-project/lotus/chain/types"
@@ -28,6 +27,7 @@ import (
 	_ "github.com/filecoin-project/lotus/lib/sigs/secp"
 	"github.com/filecoin-project/lotus/metrics"
 	"github.com/filecoin-project/lotus/node/impl/full"
+	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
 
 const (
@@ -43,54 +43,57 @@ const (
 // TargetAPI defines the API methods that the Node depends on
 // (to make it easy to mock for tests)
 type TargetAPI interface {
-	Version(context.Context) (api.APIVersion, error)
-	ChainGetParentMessages(context.Context, cid.Cid) ([]api.Message, error)
-	ChainGetParentReceipts(context.Context, cid.Cid) ([]*types.MessageReceipt, error)
 	ChainGetBlockMessages(context.Context, cid.Cid) (*api.BlockMessages, error)
+	ChainGetGenesis(context.Context) (*types.TipSet, error)
 	ChainGetMessage(ctx context.Context, mc cid.Cid) (*types.Message, error)
 	ChainGetNode(ctx context.Context, p string) (*api.IpldObject, error)
+	ChainGetParentMessages(context.Context, cid.Cid) ([]api.Message, error)
+	ChainGetParentReceipts(context.Context, cid.Cid) ([]*types.MessageReceipt, error)
+	ChainGetPath(ctx context.Context, from, to types.TipSetKey) ([]*api.HeadChange, error)
 	ChainGetTipSet(ctx context.Context, tsk types.TipSetKey) (*types.TipSet, error)
-	ChainGetTipSetByHeight(ctx context.Context, h abi.ChainEpoch, tsk types.TipSetKey) (*types.TipSet, error)
 	ChainGetTipSetAfterHeight(ctx context.Context, h abi.ChainEpoch, tsk types.TipSetKey) (*types.TipSet, error)
+	ChainGetTipSetByHeight(ctx context.Context, h abi.ChainEpoch, tsk types.TipSetKey) (*types.TipSet, error)
 	ChainHasObj(context.Context, cid.Cid) (bool, error)
 	ChainHead(ctx context.Context) (*types.TipSet, error)
 	ChainNotify(context.Context) (<-chan []*api.HeadChange, error)
-	ChainGetPath(ctx context.Context, from, to types.TipSetKey) ([]*api.HeadChange, error)
-	ChainReadObj(context.Context, cid.Cid) ([]byte, error)
 	ChainPutObj(context.Context, blocks.Block) error
-	ChainGetGenesis(context.Context) (*types.TipSet, error)
+	ChainReadObj(context.Context, cid.Cid) ([]byte, error)
+	GasEstimateGasPremium(context.Context, uint64, address.Address, int64, types.TipSetKey) (types.BigInt, error)
 	GasEstimateMessageGas(ctx context.Context, msg *types.Message, spec *api.MessageSendSpec, tsk types.TipSetKey) (*types.Message, error)
-    MpoolGetNonce(ctx context.Context, addr address.Address) (uint64, error)
+	MpoolGetNonce(ctx context.Context, addr address.Address) (uint64, error)
 	MpoolPushUntrusted(ctx context.Context, sm *types.SignedMessage) (cid.Cid, error)
 	MsigGetAvailableBalance(ctx context.Context, addr address.Address, tsk types.TipSetKey) (types.BigInt, error)
+	MsigGetPending(ctx context.Context, addr address.Address, ts types.TipSetKey) ([]*api.MsigTransaction, error)
 	MsigGetVested(ctx context.Context, addr address.Address, start types.TipSetKey, end types.TipSetKey) (types.BigInt, error)
 	MsigGetVestingSchedule(context.Context, address.Address, types.TipSetKey) (api.MsigVesting, error)
-	MsigGetPending(ctx context.Context, addr address.Address, ts types.TipSetKey) ([]*api.MsigTransaction, error)
 	StateAccountKey(ctx context.Context, addr address.Address, tsk types.TipSetKey) (address.Address, error)
-    StateCall(ctx context.Context, msg *types.Message, tsk types.TipSetKey) (*api.InvocResult, error)
-    StateDealProviderCollateralBounds(ctx context.Context, size abi.PaddedPieceSize, verified bool, tsk types.TipSetKey) (api.DealCollateralBounds, error)
-    StateDecodeParams(ctx context.Context, toAddr address.Address, method abi.MethodNum, params []byte, tsk types.TipSetKey) (interface{}, error)
+	StateCall(ctx context.Context, msg *types.Message, tsk types.TipSetKey) (*api.InvocResult, error)
+	StateCirculatingSupply(context.Context, types.TipSetKey) (abi.TokenAmount, error)
+	StateDealProviderCollateralBounds(ctx context.Context, size abi.PaddedPieceSize, verified bool, tsk types.TipSetKey) (api.DealCollateralBounds, error)
+	StateDecodeParams(ctx context.Context, toAddr address.Address, method abi.MethodNum, params []byte, tsk types.TipSetKey) (interface{}, error)
 	StateGetActor(ctx context.Context, actor address.Address, ts types.TipSetKey) (*types.Actor, error)
-	StateLookupID(ctx context.Context, addr address.Address, tsk types.TipSetKey) (address.Address, error)
 	StateListMiners(ctx context.Context, tsk types.TipSetKey) ([]address.Address, error)
+	StateLookupID(ctx context.Context, addr address.Address, tsk types.TipSetKey) (address.Address, error)
 	StateMarketBalance(ctx context.Context, addr address.Address, tsk types.TipSetKey) (api.MarketBalance, error)
 	StateMarketStorageDeal(ctx context.Context, dealId abi.DealID, tsk types.TipSetKey) (*api.MarketDeal, error)
+	StateMinerAvailableBalance(context.Context, address.Address, types.TipSetKey) (types.BigInt, error)
+	StateMinerDeadlines(context.Context, address.Address, types.TipSetKey) ([]api.Deadline, error)
+	StateMinerFaults(context.Context, address.Address, types.TipSetKey) (bitfield.BitField, error)
+	StateMinerInfo(context.Context, address.Address, types.TipSetKey) (api.MinerInfo, error)
+	StateMinerPower(context.Context, address.Address, types.TipSetKey) (*api.MinerPower, error)
+	StateMinerProvingDeadline(context.Context, address.Address, types.TipSetKey) (*dline.Info, error)
+	StateMinerRecoveries(context.Context, address.Address, types.TipSetKey) (bitfield.BitField, error)
+	StateMinerSectorCount(context.Context, address.Address, types.TipSetKey) (api.MinerSectors, error)
 	StateNetworkName(ctx context.Context) (dtypes.NetworkName, error)
 	StateNetworkVersion(context.Context, types.TipSetKey) (network.Version, error)
-	StateSearchMsg(ctx context.Context, from types.TipSetKey, msg cid.Cid, limit abi.ChainEpoch, allowReplaced bool) (*api.MsgLookup, error)
-	StateWaitMsg(ctx context.Context, cid cid.Cid, confidence uint64, limit abi.ChainEpoch, allowReplaced bool) (*api.MsgLookup, error)
 	StateReadState(ctx context.Context, actor address.Address, tsk types.TipSetKey) (*api.ActorState, error)
-	StateMinerPower(context.Context, address.Address, types.TipSetKey) (*api.MinerPower, error)
-	StateMinerFaults(context.Context, address.Address, types.TipSetKey) (bitfield.BitField, error)
-	StateMinerRecoveries(context.Context, address.Address, types.TipSetKey) (bitfield.BitField, error)
-	StateMinerInfo(context.Context, address.Address, types.TipSetKey) (api.MinerInfo, error)
-	StateMinerDeadlines(context.Context, address.Address, types.TipSetKey) ([]api.Deadline, error)
-	StateMinerAvailableBalance(context.Context, address.Address, types.TipSetKey) (types.BigInt, error)
-	StateMinerProvingDeadline(context.Context, address.Address, types.TipSetKey) (*dline.Info, error)
-	StateCirculatingSupply(context.Context, types.TipSetKey) (abi.TokenAmount, error)
+	StateReplay(context.Context, types.TipSetKey, cid.Cid) (*api.InvocResult, error)
+	StateSearchMsg(ctx context.Context, from types.TipSetKey, msg cid.Cid, limit abi.ChainEpoch, allowReplaced bool) (*api.MsgLookup, error)
 	StateSectorGetInfo(ctx context.Context, maddr address.Address, n abi.SectorNumber, tsk types.TipSetKey) (*miner.SectorOnChainInfo, error)
 	StateVerifiedClientStatus(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*abi.StoragePower, error)
 	StateVMCirculatingSupplyInternal(context.Context, types.TipSetKey) (api.CirculatingSupply, error)
+	StateWaitMsg(ctx context.Context, cid cid.Cid, confidence uint64, limit abi.ChainEpoch, allowReplaced bool) (*api.MsgLookup, error)
+	Version(context.Context) (api.APIVersion, error)
 	WalletBalance(context.Context, address.Address) (types.BigInt, error)
 
 	EthAddressToFilecoinAddress(ctx context.Context, ethAddress ethtypes.EthAddress) (address.Address, error)

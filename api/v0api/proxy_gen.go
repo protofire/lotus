@@ -449,6 +449,8 @@ type GatewayMethods struct {
 
 	ChainReadObj func(p0 context.Context, p1 cid.Cid) ([]byte, error) ``
 
+	GasEstimateGasPremium func(p0 context.Context, p1 uint64, p2 address.Address, p3 int64, p4 types.TipSetKey) (types.BigInt, error) ``
+
 	GasEstimateMessageGas func(p0 context.Context, p1 *types.Message, p2 *api.MessageSendSpec, p3 types.TipSetKey) (*types.Message, error) ``
 
 	MpoolGetNonce func(p0 context.Context, p1 address.Address) (uint64, error) ``
@@ -463,11 +465,11 @@ type GatewayMethods struct {
 
 	StateAccountKey func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (address.Address, error) ``
 
-    StateCall func(p0 context.Context, p1 *types.Message, p2 types.TipSetKey) (*api.InvocResult, error) ``
+	StateCall func(p0 context.Context, p1 *types.Message, p2 types.TipSetKey) (*api.InvocResult, error) ``
 
-    StateDealProviderCollateralBounds func(p0 context.Context, p1 abi.PaddedPieceSize, p2 bool, p3 types.TipSetKey) (api.DealCollateralBounds, error) ``
+	StateDealProviderCollateralBounds func(p0 context.Context, p1 abi.PaddedPieceSize, p2 bool, p3 types.TipSetKey) (api.DealCollateralBounds, error) ``
 
-    StateDecodeParams func(p0 context.Context, p1 address.Address, p2 abi.MethodNum, p3 []byte, p4 types.TipSetKey) (interface{}, error) ``
+	StateDecodeParams func(p0 context.Context, p1 address.Address, p2 abi.MethodNum, p3 []byte, p4 types.TipSetKey) (interface{}, error) ``
 
 	StateGetActor func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*types.Actor, error) ``
 
@@ -487,9 +489,13 @@ type GatewayMethods struct {
 
 	StateMinerProvingDeadline func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*dline.Info, error) ``
 
+	StateMinerSectorCount func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (api.MinerSectors, error) ``
+
 	StateNetworkName func(p0 context.Context) (dtypes.NetworkName, error) ``
 
 	StateNetworkVersion func(p0 context.Context, p1 types.TipSetKey) (abinetwork.Version, error) ``
+
+	StateReplay func(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid) (*api.InvocResult, error) ``
 
 	StateSearchMsg func(p0 context.Context, p1 cid.Cid) (*api.MsgLookup, error) ``
 
@@ -2674,6 +2680,17 @@ func (s *GatewayStub) ChainReadObj(p0 context.Context, p1 cid.Cid) ([]byte, erro
 	return *new([]byte), ErrNotSupported
 }
 
+func (s *GatewayStruct) GasEstimateGasPremium(p0 context.Context, p1 uint64, p2 address.Address, p3 int64, p4 types.TipSetKey) (types.BigInt, error) {
+	if s.Internal.GasEstimateGasPremium == nil {
+		return *new(types.BigInt), ErrNotSupported
+	}
+	return s.Internal.GasEstimateGasPremium(p0, p1, p2, p3, p4)
+}
+
+func (s *GatewayStub) GasEstimateGasPremium(p0 context.Context, p1 uint64, p2 address.Address, p3 int64, p4 types.TipSetKey) (types.BigInt, error) {
+	return *new(types.BigInt), ErrNotSupported
+}
+
 func (s *GatewayStruct) GasEstimateMessageGas(p0 context.Context, p1 *types.Message, p2 *api.MessageSendSpec, p3 types.TipSetKey) (*types.Message, error) {
 	if s.Internal.GasEstimateMessageGas == nil {
 		return nil, ErrNotSupported
@@ -2686,14 +2703,14 @@ func (s *GatewayStub) GasEstimateMessageGas(p0 context.Context, p1 *types.Messag
 }
 
 func (s *GatewayStruct) MpoolGetNonce(p0 context.Context, p1 address.Address) (uint64, error) {
-        if s.Internal.MpoolGetNonce == nil {
-                return 0, ErrNotSupported
-        }
-        return s.Internal.MpoolGetNonce(p0, p1)
+	if s.Internal.MpoolGetNonce == nil {
+		return 0, ErrNotSupported
+	}
+	return s.Internal.MpoolGetNonce(p0, p1)
 }
 
 func (s *GatewayStub) MpoolGetNonce(p0 context.Context, p1 address.Address) (uint64, error) {
-        return 0, ErrNotSupported
+	return 0, ErrNotSupported
 }
 
 func (s *GatewayStruct) MpoolPush(p0 context.Context, p1 *types.SignedMessage) (cid.Cid, error) {
@@ -2740,8 +2757,6 @@ func (s *GatewayStub) MsigGetVested(p0 context.Context, p1 address.Address, p2 t
 	return *new(types.BigInt), ErrNotSupported
 }
 
-
-
 func (s *GatewayStruct) StateAccountKey(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (address.Address, error) {
 	if s.Internal.StateAccountKey == nil {
 		return *new(address.Address), ErrNotSupported
@@ -2754,14 +2769,14 @@ func (s *GatewayStub) StateAccountKey(p0 context.Context, p1 address.Address, p2
 }
 
 func (s *GatewayStruct) StateCall(p0 context.Context, p1 *types.Message, p2 types.TipSetKey) (*api.InvocResult, error) {
-        if s.Internal.StateCall == nil {
-                return nil, ErrNotSupported
-        }
-        return s.Internal.StateCall(p0, p1, p2)
+	if s.Internal.StateCall == nil {
+		return nil, ErrNotSupported
+	}
+	return s.Internal.StateCall(p0, p1, p2)
 }
 
 func (s *GatewayStub) StateCall(p0 context.Context, p1 *types.Message, p2 types.TipSetKey) (*api.InvocResult, error) {
-        return nil, ErrNotSupported
+	return nil, ErrNotSupported
 }
 
 func (s *GatewayStruct) StateDealProviderCollateralBounds(p0 context.Context, p1 abi.PaddedPieceSize, p2 bool, p3 types.TipSetKey) (api.DealCollateralBounds, error) {
@@ -2776,14 +2791,14 @@ func (s *GatewayStub) StateDealProviderCollateralBounds(p0 context.Context, p1 a
 }
 
 func (s *GatewayStruct) StateDecodeParams(p0 context.Context, p1 address.Address, p2 abi.MethodNum, p3 []byte, p4 types.TipSetKey) (interface{}, error) {
-        if s.Internal.StateDecodeParams == nil {
-                return nil, ErrNotSupported
-        }
-        return s.Internal.StateDecodeParams(p0, p1, p2, p3, p4)
+	if s.Internal.StateDecodeParams == nil {
+		return nil, ErrNotSupported
+	}
+	return s.Internal.StateDecodeParams(p0, p1, p2, p3, p4)
 }
 
 func (s *GatewayStub) StateDecodeParams(p0 context.Context, p1 address.Address, p2 abi.MethodNum, p3 []byte, p4 types.TipSetKey) (interface{}, error) {
-        return nil, ErrNotSupported
+	return nil, ErrNotSupported
 }
 
 func (s *GatewayStruct) StateGetActor(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*types.Actor, error) {
@@ -2885,6 +2900,17 @@ func (s *GatewayStub) StateMinerProvingDeadline(p0 context.Context, p1 address.A
 	return nil, ErrNotSupported
 }
 
+func (s *GatewayStruct) StateMinerSectorCount(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (api.MinerSectors, error) {
+	if s.Internal.StateMinerSectorCount == nil {
+		return *new(api.MinerSectors), ErrNotSupported
+	}
+	return s.Internal.StateMinerSectorCount(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateMinerSectorCount(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (api.MinerSectors, error) {
+	return *new(api.MinerSectors), ErrNotSupported
+}
+
 func (s *GatewayStruct) StateNetworkName(p0 context.Context) (dtypes.NetworkName, error) {
 	if s.Internal.StateNetworkName == nil {
 		return *new(dtypes.NetworkName), ErrNotSupported
@@ -2905,6 +2931,17 @@ func (s *GatewayStruct) StateNetworkVersion(p0 context.Context, p1 types.TipSetK
 
 func (s *GatewayStub) StateNetworkVersion(p0 context.Context, p1 types.TipSetKey) (abinetwork.Version, error) {
 	return *new(abinetwork.Version), ErrNotSupported
+}
+
+func (s *GatewayStruct) StateReplay(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid) (*api.InvocResult, error) {
+	if s.Internal.StateReplay == nil {
+		return nil, ErrNotSupported
+	}
+	return s.Internal.StateReplay(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateReplay(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid) (*api.InvocResult, error) {
+	return nil, ErrNotSupported
 }
 
 func (s *GatewayStruct) StateSearchMsg(p0 context.Context, p1 cid.Cid) (*api.MsgLookup, error) {
