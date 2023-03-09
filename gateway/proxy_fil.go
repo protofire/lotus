@@ -16,11 +16,11 @@ import (
 
 	"github.com/filecoin-project/lotus/api"
 	apitypes "github.com/filecoin-project/lotus/api/types"
-	"github.com/filecoin-project/lotus/node/modules/dtypes"
 	"github.com/filecoin-project/lotus/build"
 	"github.com/filecoin-project/lotus/chain/actors/builtin/miner"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/lib/sigs"
+	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
 
 func (gw *Node) Discover(ctx context.Context) (apitypes.OpenRPCDocument, error) {
@@ -60,6 +60,36 @@ func (gw *Node) ChainHasObj(ctx context.Context, c cid.Cid) (bool, error) {
 		return false, err
 	}
 	return gw.target.ChainHasObj(ctx, c)
+}
+
+func (gw *Node) StateReplay(ctx context.Context, tsk types.TipSetKey, c cid.Cid) (*api.InvocResult, error) {
+	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
+		return nil, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return nil, err
+	}
+	return gw.target.StateReplay(ctx, tsk, c)
+}
+
+func (gw *Node) GasEstimateGasPremium(ctx context.Context, nblocksincl uint64, sender address.Address, gaslimit int64, tsk types.TipSetKey) (types.BigInt, error) {
+	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
+		return types.BigInt{}, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return types.BigInt{}, err
+	}
+	return gw.target.GasEstimateGasPremium(ctx, nblocksincl, sender, gaslimit, tsk)
+}
+
+func (gw *Node) StateMinerSectorCount(ctx context.Context, m address.Address, tsk types.TipSetKey) (api.MinerSectors, error) {
+	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
+		return api.MinerSectors{}, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return api.MinerSectors{}, err
+	}
+	return gw.target.StateMinerSectorCount(ctx, m, tsk)
 }
 
 func (gw *Node) ChainHead(ctx context.Context) (*types.TipSet, error) {
@@ -189,10 +219,10 @@ func (gw *Node) GasEstimateMessageGas(ctx context.Context, msg *types.Message, s
 }
 
 func (gw *Node) MpoolGetNonce(ctx context.Context, addr address.Address) (uint64, error) {
-        if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
-                return 0, err
-        }
-        return gw.target.MpoolGetNonce(ctx, addr)
+	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
+		return 0, err
+	}
+	return gw.target.MpoolGetNonce(ctx, addr)
 }
 
 func (gw *Node) MpoolPush(ctx context.Context, sm *types.SignedMessage) (cid.Cid, error) {
@@ -277,13 +307,13 @@ func (gw *Node) StateDealProviderCollateralBounds(ctx context.Context, size abi.
 }
 
 func (gw *Node) StateDecodeParams(ctx context.Context, toAddr address.Address, method abi.MethodNum, params []byte, tsk types.TipSetKey) (interface{}, error) {
-        if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
-                return nil, err
-        }
-        if err := gw.checkTipsetKey(ctx, tsk); err != nil {
-                return nil, err
-        }
-        return gw.target.StateDecodeParams(ctx, toAddr, method, params, tsk)
+	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
+		return nil, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return nil, err
+	}
+	return gw.target.StateDecodeParams(ctx, toAddr, method, params, tsk)
 }
 
 func (gw *Node) StateGetActor(ctx context.Context, actor address.Address, tsk types.TipSetKey) (*types.Actor, error) {

@@ -7,6 +7,15 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/ipfs/go-cid"
+	blocks "github.com/ipfs/go-libipfs/blocks"
+	"github.com/libp2p/go-libp2p/core/metrics"
+	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/protocol"
+	"golang.org/x/xerrors"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	datatransfer "github.com/filecoin-project/go-data-transfer"
@@ -23,6 +32,7 @@ import (
 	"github.com/filecoin-project/go-state-types/dline"
 	abinetwork "github.com/filecoin-project/go-state-types/network"
 	"github.com/filecoin-project/go-state-types/proof"
+
 	apitypes "github.com/filecoin-project/lotus/api/types"
 	builtinactors "github.com/filecoin-project/lotus/chain/actors/builtin"
 	lminer "github.com/filecoin-project/lotus/chain/actors/builtin/miner"
@@ -35,14 +45,6 @@ import (
 	"github.com/filecoin-project/lotus/storage/sealer/fsutil"
 	"github.com/filecoin-project/lotus/storage/sealer/sealtasks"
 	"github.com/filecoin-project/lotus/storage/sealer/storiface"
-	"github.com/google/uuid"
-	"github.com/ipfs/go-cid"
-	blocks "github.com/ipfs/go-libipfs/blocks"
-	"github.com/libp2p/go-libp2p/core/metrics"
-	"github.com/libp2p/go-libp2p/core/network"
-	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/core/protocol"
-	"golang.org/x/xerrors"
 )
 
 var ErrNotSupported = xerrors.New("method not supported")
@@ -714,9 +716,11 @@ type GatewayMethods struct {
 
 	EthUnsubscribe func(p0 context.Context, p1 ethtypes.EthSubscriptionID) (bool, error) ``
 
+	GasEstimateGasPremium func(p0 context.Context, p1 uint64, p2 address.Address, p3 int64, p4 types.TipSetKey) (types.BigInt, error) ``
+
 	GasEstimateMessageGas func(p0 context.Context, p1 *types.Message, p2 *MessageSendSpec, p3 types.TipSetKey) (*types.Message, error) ``
 
-        MpoolGetNonce func(p0 context.Context, p1 address.Address) (uint64, error) ``
+	MpoolGetNonce func(p0 context.Context, p1 address.Address) (uint64, error) ``
 
 	MpoolPush func(p0 context.Context, p1 *types.SignedMessage) (cid.Cid, error) ``
 
@@ -734,11 +738,11 @@ type GatewayMethods struct {
 
 	StateAccountKey func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (address.Address, error) ``
 
-        StateCall func(p0 context.Context, p1 *types.Message, p2 types.TipSetKey) (*InvocResult, error) ``
+	StateCall func(p0 context.Context, p1 *types.Message, p2 types.TipSetKey) (*InvocResult, error) ``
 
 	StateDealProviderCollateralBounds func(p0 context.Context, p1 abi.PaddedPieceSize, p2 bool, p3 types.TipSetKey) (DealCollateralBounds, error) ``
 
-        StateDecodeParams func(p0 context.Context, p1 address.Address, p2 abi.MethodNum, p3 []byte, p4 types.TipSetKey) (interface{}, error) ``
+	StateDecodeParams func(p0 context.Context, p1 address.Address, p2 abi.MethodNum, p3 []byte, p4 types.TipSetKey) (interface{}, error) ``
 
 	StateGetActor func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*types.Actor, error) ``
 
@@ -756,11 +760,15 @@ type GatewayMethods struct {
 
 	StateMinerProvingDeadline func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*dline.Info, error) ``
 
-        StateNetworkName func(p0 context.Context) (dtypes.NetworkName, error) ``
+	StateMinerSectorCount func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (MinerSectors, error) ``
+
+	StateNetworkName func(p0 context.Context) (dtypes.NetworkName, error) ``
 
 	StateNetworkVersion func(p0 context.Context, p1 types.TipSetKey) (apitypes.NetworkVersion, error) ``
 
-	StateReadState func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*ActorState, error) `perm:"read"`
+	StateReadState func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*ActorState, error) ``
+
+	StateReplay func(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid) (*InvocResult, error) ``
 
 	StateSearchMsg func(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid, p3 abi.ChainEpoch, p4 bool) (*MsgLookup, error) ``
 
@@ -4545,6 +4553,17 @@ func (s *GatewayStub) EthUnsubscribe(p0 context.Context, p1 ethtypes.EthSubscrip
 	return false, ErrNotSupported
 }
 
+func (s *GatewayStruct) GasEstimateGasPremium(p0 context.Context, p1 uint64, p2 address.Address, p3 int64, p4 types.TipSetKey) (types.BigInt, error) {
+	if s.Internal.GasEstimateGasPremium == nil {
+		return *new(types.BigInt), ErrNotSupported
+	}
+	return s.Internal.GasEstimateGasPremium(p0, p1, p2, p3, p4)
+}
+
+func (s *GatewayStub) GasEstimateGasPremium(p0 context.Context, p1 uint64, p2 address.Address, p3 int64, p4 types.TipSetKey) (types.BigInt, error) {
+	return *new(types.BigInt), ErrNotSupported
+}
+
 func (s *GatewayStruct) GasEstimateMessageGas(p0 context.Context, p1 *types.Message, p2 *MessageSendSpec, p3 types.TipSetKey) (*types.Message, error) {
 	if s.Internal.GasEstimateMessageGas == nil {
 		return nil, ErrNotSupported
@@ -4678,14 +4697,14 @@ func (s *GatewayStub) StateDealProviderCollateralBounds(p0 context.Context, p1 a
 }
 
 func (s *GatewayStruct) StateDecodeParams(p0 context.Context, p1 address.Address, p2 abi.MethodNum, p3 []byte, p4 types.TipSetKey) (interface{}, error) {
-        if s.Internal.StateDecodeParams == nil {
-                return nil, ErrNotSupported
-        }
-        return s.Internal.StateDecodeParams(p0, p1, p2, p3, p4)
+	if s.Internal.StateDecodeParams == nil {
+		return nil, ErrNotSupported
+	}
+	return s.Internal.StateDecodeParams(p0, p1, p2, p3, p4)
 }
 
 func (s *GatewayStub) StateDecodeParams(p0 context.Context, p1 address.Address, p2 abi.MethodNum, p3 []byte, p4 types.TipSetKey) (interface{}, error) {
-        return nil, ErrNotSupported
+	return nil, ErrNotSupported
 }
 
 func (s *GatewayStruct) StateGetActor(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*types.Actor, error) {
@@ -4776,6 +4795,17 @@ func (s *GatewayStub) StateMinerProvingDeadline(p0 context.Context, p1 address.A
 	return nil, ErrNotSupported
 }
 
+func (s *GatewayStruct) StateMinerSectorCount(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (MinerSectors, error) {
+	if s.Internal.StateMinerSectorCount == nil {
+		return *new(MinerSectors), ErrNotSupported
+	}
+	return s.Internal.StateMinerSectorCount(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateMinerSectorCount(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (MinerSectors, error) {
+	return *new(MinerSectors), ErrNotSupported
+}
+
 func (s *GatewayStruct) StateNetworkName(p0 context.Context) (dtypes.NetworkName, error) {
 	if s.Internal.StateNetworkName == nil {
 		return *new(dtypes.NetworkName), ErrNotSupported
@@ -4806,6 +4836,17 @@ func (s *GatewayStruct) StateReadState(p0 context.Context, p1 address.Address, p
 }
 
 func (s *GatewayStub) StateReadState(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*ActorState, error) {
+	return nil, ErrNotSupported
+}
+
+func (s *GatewayStruct) StateReplay(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid) (*InvocResult, error) {
+	if s.Internal.StateReplay == nil {
+		return nil, ErrNotSupported
+	}
+	return s.Internal.StateReplay(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateReplay(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid) (*InvocResult, error) {
 	return nil, ErrNotSupported
 }
 
