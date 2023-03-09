@@ -63,10 +63,10 @@ func (gw *Node) GasEstimateGasPremium(ctx context.Context, nblocksincl uint64, s
 
 func (gw *Node) StateMinerSectorCount(ctx context.Context, m address.Address, tsk types.TipSetKey) (api.MinerSectors, error) {
 	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
-		return nil, err
+		return api.MinerSectors{}, err
 	}
 	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
-		return nil, err
+		return api.MinerSectors{}, err
 	}
 	return gw.target.StateMinerSectorCount(ctx, m, tsk)
 }
