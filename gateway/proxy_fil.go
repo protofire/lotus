@@ -53,10 +53,10 @@ func (gw *Node) StateReplay(ctx context.Context, tsk types.TipSetKey, c cid.Cid)
 
 func (gw *Node) GasEstimateGasPremium(ctx context.Context, nblocksincl uint64, sender address.Address, gaslimit int64, tsk types.TipSetKey) (types.BigInt, error) {
 	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
-		return nil, err
+		return types.BigInt{}, err
 	}
 	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
-		return nil, err
+		return types.BigInt{}, err
 	}
 	return gw.target.GasEstimateGasPremium(ctx, nblocksincl, sender, gaslimit, tsk)
 }
