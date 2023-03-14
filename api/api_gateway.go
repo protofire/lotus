@@ -33,6 +33,7 @@ import (
 //  * Generate openrpc blobs
 
 type Gateway interface {
+	StateVerifierStatus(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*abi.StoragePower, error)
 	StateMinerSectorCount(context.Context, address.Address, types.TipSetKey) (MinerSectors, error)
 	GasEstimateGasPremium(context.Context, uint64, address.Address, int64, types.TipSetKey) (types.BigInt, error)
 	StateReplay(context.Context, types.TipSetKey, cid.Cid) (*InvocResult, error)
