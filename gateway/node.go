@@ -43,6 +43,7 @@ const (
 // TargetAPI defines the API methods that the Node depends on
 // (to make it easy to mock for tests)
 type TargetAPI interface {
+	StateVerifierStatus(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*abi.StoragePower, error)
 	GasEstimateGasPremium(context.Context, uint64, address.Address, int64, types.TipSetKey) (types.BigInt, error)
 	StateReplay(context.Context, types.TipSetKey, cid.Cid) (*api.InvocResult, error)
 	StateMinerSectorCount(context.Context, address.Address, types.TipSetKey) (api.MinerSectors, error)
