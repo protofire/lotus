@@ -23,6 +23,16 @@ import (
 	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
 
+func (gw *Node) MinerGetBaseInfo(ctx context.Context, addr address.Address, h abi.ChainEpoch, tsk types.TipSetKey) (*api.MiningBaseInfo, error) {
+	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
+		return *api.MiningBaseInfo{}, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return *api.MiningBaseInfo{}, err
+	}
+	return gw.target.MinerGetBaseInfo(ctx, addr, h, tsk)
+}
+
 func (gw *Node) StateVerifierStatus(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*abi.StoragePower, error) {
 	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
 		return nil, err
