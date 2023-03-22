@@ -25,10 +25,10 @@ import (
 
 func (gw *Node) MinerGetBaseInfo(ctx context.Context, addr address.Address, h abi.ChainEpoch, tsk types.TipSetKey) (*api.MiningBaseInfo, error) {
 	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
-		return *api.MiningBaseInfo{}, err
+		return api.MiningBaseInfo{}, err
 	}
 	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
-		return *api.MiningBaseInfo{}, err
+		return api.MiningBaseInfo{}, err
 	}
 	return gw.target.MinerGetBaseInfo(ctx, addr, h, tsk)
 }
