@@ -50,16 +50,6 @@ func (gw *Node) MinerGetBaseInfo(ctx context.Context, addr address.Address, h ab
 	return gw.target.MinerGetBaseInfo(ctx, addr, h, tsk)
 }
 
-func (gw *Node) StateVerifierStatus(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*abi.StoragePower, error) {
-	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
-		return nil, err
-	}
-	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
-		return nil, err
-	}
-	return gw.target.StateVerifierStatus(ctx, addr, tsk)
-}
-
 func (gw *Node) StateReplay(ctx context.Context, tsk types.TipSetKey, c cid.Cid) (*api.InvocResult, error) {
 	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
 		return nil, err
