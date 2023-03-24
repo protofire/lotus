@@ -33,6 +33,8 @@ import (
 //  * Generate openrpc blobs
 
 type Gateway interface {
+    MpoolPending(context.Context, types.TipSetKey) ([]*types.SignedMessage, error)
+    ChainGetBlock(context.Context, cid.Cid) (*types.BlockHeader, error)
 	MinerGetBaseInfo(context.Context, address.Address, abi.ChainEpoch, types.TipSetKey) (*MiningBaseInfo, error)
 	StateVerifierStatus(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*abi.StoragePower, error)
 	StateMinerSectorCount(context.Context, address.Address, types.TipSetKey) (MinerSectors, error)
