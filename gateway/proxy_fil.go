@@ -22,7 +22,8 @@ import (
 	"github.com/filecoin-project/lotus/lib/sigs"
 	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
-func (gw *Node) StateMarketParticipants(ctx context.Context, tsk types.TipSetKey) (map[string]MarketBalance, error) {
+
+func (gw *Node) StateMarketParticipants(ctx context.Context, tsk types.TipSetKey) (map[string]api.MarketBalance, error) {
 	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
 		return nil, err
 	}
