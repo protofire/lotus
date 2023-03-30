@@ -23,6 +23,29 @@ import (
 	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
 
+func (gw *Node) StateSearchMsgLimited(ctx context.Context, msg cid.Cid, limit abi.ChainEpoch) (*api.MsgLookup, error) {
+	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
+		return nil, err
+	}
+	if limit == api.LookbackNoLimit {
+		limit = gw.stateWaitLookbackLimit
+	}
+	if gw.stateWaitLookbackLimit != api.LookbackNoLimit && limit > gw.stateWaitLookbackLimit {
+		limit = gw.stateWaitLookbackLimit
+	}
+	return gw.target.StateSearchMsgLimited(ctx, msg, limit)
+}
+
+func (gw *Node) StateMinerAvailableBalance(ctx context.Context, addr address.Address, tsk types.TipSetKey) (types.BigInt, error) {
+	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
+		return types.BigInt{}, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return types.BigInt{}, err
+	}
+	return gw.target.StateMinerAvailableBalance(ctx, addr, tsk)
+}
+
 func (gw *Node) StateMarketParticipants(ctx context.Context, tsk types.TipSetKey) (map[string]api.MarketBalance, error) {
 	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
 		return nil, err
