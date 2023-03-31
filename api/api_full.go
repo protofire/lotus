@@ -75,6 +75,23 @@ type FullNode interface {
 	// First message is guaranteed to be of len == 1, and type == 'current'.
 	ChainNotify(context.Context) (<-chan []*HeadChange, error) //perm:read
 
+	// StateSearchMsgLimited looks back up to limit epochs in the chain for a message, and returns its receipt and the tipset where it was executed
+	//
+	// NOTE: If a replacing message is found on chain, this method will return
+	// a MsgLookup for the replacing message - the MsgLookup.Message will be a different
+	// CID than the one provided in the 'cid' param, MsgLookup.Receipt will contain the
+	// result of the execution of the replacing message.
+	//
+	// If the caller wants to ensure that exactly the requested message was executed,
+	// they MUST check that MsgLookup.Message is equal to the provided 'cid'.
+	// Without this check both the requested and original message may appear as
+	// successfully executed on-chain, which may look like a double-spend.
+	//
+	// A replacing message is a message with a different CID, any of Gas values, and
+	// different signature, but with all other parameters matching (source/destination,
+	// nonce, params, etc.)
+	StateSearchMsgLimited(ctx context.Context, msg cid.Cid, limit abi.ChainEpoch) (*MsgLookup, error) //perm:read
+
 	// ChainHead returns the current head of the chain.
 	ChainHead(context.Context) (*types.TipSet, error) //perm:read
 
