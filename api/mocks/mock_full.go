@@ -3713,21 +3713,6 @@ func (mr *MockFullNodeMockRecorder) StateSearchMsg(arg0, arg1, arg2, arg3, arg4 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StateSearchMsg", reflect.TypeOf((*MockFullNode)(nil).StateSearchMsg), arg0, arg1, arg2, arg3, arg4)
 }
 
-// StateSearchMsgLimited mocks base method.
-func (m *MockFullNode) StateSearchMsgLimited(arg0 context.Context, arg1 cid.Cid, arg2 abi.ChainEpoch) (*api.MsgLookup, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StateSearchMsgLimited", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*api.MsgLookup)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// StateSearchMsgLimited indicates an expected call of StateSearchMsgLimited.
-func (mr *MockFullNodeMockRecorder) StateSearchMsgLimited(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StateSearchMsgLimited", reflect.TypeOf((*MockFullNode)(nil).StateSearchMsgLimited), arg0, arg1, arg2)
-}
-
 // StateSectorExpiration mocks base method.
 func (m *MockFullNode) StateSectorExpiration(arg0 context.Context, arg1 address.Address, arg2 abi.SectorNumber, arg3 types.TipSetKey) (*miner0.SectorExpiration, error) {
 	m.ctrl.T.Helper()

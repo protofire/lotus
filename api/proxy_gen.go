@@ -554,8 +554,6 @@ type FullNodeMethods struct {
 
 	StateSearchMsg func(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid, p3 abi.ChainEpoch, p4 bool) (*MsgLookup, error) `perm:"read"`
 
-	StateSearchMsgLimited func(p0 context.Context, p1 cid.Cid, p2 abi.ChainEpoch) (*MsgLookup, error) `perm:"read"`
-
 	StateSectorExpiration func(p0 context.Context, p1 address.Address, p2 abi.SectorNumber, p3 types.TipSetKey) (*lminer.SectorExpiration, error) `perm:"read"`
 
 	StateSectorGetInfo func(p0 context.Context, p1 address.Address, p2 abi.SectorNumber, p3 types.TipSetKey) (*miner.SectorOnChainInfo, error) `perm:"read"`
@@ -793,8 +791,6 @@ type GatewayMethods struct {
 	StateReplay func(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid) (*InvocResult, error) ``
 
 	StateSearchMsg func(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid, p3 abi.ChainEpoch, p4 bool) (*MsgLookup, error) ``
-
-	StateSearchMsgLimited func(p0 context.Context, p1 cid.Cid, p2 abi.ChainEpoch) (*MsgLookup, error) ``
 
 	StateSectorGetInfo func(p0 context.Context, p1 address.Address, p2 abi.SectorNumber, p3 types.TipSetKey) (*miner.SectorOnChainInfo, error) ``
 
@@ -3754,17 +3750,6 @@ func (s *FullNodeStub) StateSearchMsg(p0 context.Context, p1 types.TipSetKey, p2
 	return nil, ErrNotSupported
 }
 
-func (s *FullNodeStruct) StateSearchMsgLimited(p0 context.Context, p1 cid.Cid, p2 abi.ChainEpoch) (*MsgLookup, error) {
-	if s.Internal.StateSearchMsgLimited == nil {
-		return nil, ErrNotSupported
-	}
-	return s.Internal.StateSearchMsgLimited(p0, p1, p2)
-}
-
-func (s *FullNodeStub) StateSearchMsgLimited(p0 context.Context, p1 cid.Cid, p2 abi.ChainEpoch) (*MsgLookup, error) {
-	return nil, ErrNotSupported
-}
-
 func (s *FullNodeStruct) StateSectorExpiration(p0 context.Context, p1 address.Address, p2 abi.SectorNumber, p3 types.TipSetKey) (*lminer.SectorExpiration, error) {
 	if s.Internal.StateSectorExpiration == nil {
 		return nil, ErrNotSupported
@@ -5005,17 +4990,6 @@ func (s *GatewayStruct) StateSearchMsg(p0 context.Context, p1 types.TipSetKey, p
 }
 
 func (s *GatewayStub) StateSearchMsg(p0 context.Context, p1 types.TipSetKey, p2 cid.Cid, p3 abi.ChainEpoch, p4 bool) (*MsgLookup, error) {
-	return nil, ErrNotSupported
-}
-
-func (s *GatewayStruct) StateSearchMsgLimited(p0 context.Context, p1 cid.Cid, p2 abi.ChainEpoch) (*MsgLookup, error) {
-	if s.Internal.StateSearchMsgLimited == nil {
-		return nil, ErrNotSupported
-	}
-	return s.Internal.StateSearchMsgLimited(p0, p1, p2)
-}
-
-func (s *GatewayStub) StateSearchMsgLimited(p0 context.Context, p1 cid.Cid, p2 abi.ChainEpoch) (*MsgLookup, error) {
 	return nil, ErrNotSupported
 }
 
