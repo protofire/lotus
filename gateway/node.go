@@ -43,7 +43,6 @@ const (
 // TargetAPI defines the API methods that the Node depends on
 // (to make it easy to mock for tests)
 type TargetAPI interface {
-	StateMinerAvailableBalance(context.Context, address.Address, types.TipSetKey) (types.BigInt, error)
 	StateMarketParticipants(context.Context, types.TipSetKey) (map[string]api.MarketBalance, error)
 	MpoolPending(context.Context, types.TipSetKey) ([]*types.SignedMessage, error)
 	ChainGetBlock(context.Context, cid.Cid) (*types.BlockHeader, error)

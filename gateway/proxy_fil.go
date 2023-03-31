@@ -23,16 +23,6 @@ import (
 	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
 
-func (gw *Node) StateMinerAvailableBalance(ctx context.Context, addr address.Address, tsk types.TipSetKey) (types.BigInt, error) {
-	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
-		return types.BigInt{}, err
-	}
-	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
-		return types.BigInt{}, err
-	}
-	return gw.target.StateMinerAvailableBalance(ctx, addr, tsk)
-}
-
 func (gw *Node) StateMarketParticipants(ctx context.Context, tsk types.TipSetKey) (map[string]api.MarketBalance, error) {
 	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
 		return nil, err
