@@ -33,10 +33,10 @@ func (gw *Node) StateSearchMsgLimited(ctx context.Context, msg cid.Cid, limit ab
 	if gw.stateWaitLookbackLimit != api.LookbackNoLimit && limit > gw.stateWaitLookbackLimit {
 		limit = gw.stateWaitLookbackLimit
 	}
-	if err := gw.checkTipsetKey(ctx, from); err != nil {
+	if err := gw.checkTipsetKey(ctx); err != nil {
 		return nil, err
 	}
-	return gw.target.StateSearchMsgLimited(ctx, from, msg, limit)
+	return gw.target.StateSearchMsgLimited(ctx, msg, limit)
 }
 
 func (gw *Node) StateMarketParticipants(ctx context.Context, tsk types.TipSetKey) (map[string]api.MarketBalance, error) {
