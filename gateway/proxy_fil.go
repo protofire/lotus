@@ -38,11 +38,17 @@ func (gw *Node) IPCReadGatewayState(ctx context.Context, actor address.Address, 
 	if err := gw.limit(ctx, basicRateLimitTokens); err != nil {
 		return nil, err
 	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return nil, err
+	}
 	return gw.target.IPCReadGatewayState(ctx, actor, tsk)
 }
 
 func (gw *Node) IPCReadSubnetActorState(ctx context.Context, sn sdk.SubnetID, tsk types.TipSetKey) (*subnetactor.State, error) {
 	if err := gw.limit(ctx, basicRateLimitTokens); err != nil {
+		return nil, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
 		return nil, err
 	}
 	return gw.target.IPCReadSubnetActorState(ctx, sn, tsk)
@@ -101,12 +107,15 @@ func (gw *Node) IPCGetTopDownMsgs(ctx context.Context, gatewayAddr address.Addre
 	if err := gw.limit(ctx, basicRateLimitTokens); err != nil {
 		return nil, err
 	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return nil, err
+	}
 	return gw.target.IPCGetTopDownMsgs(ctx, gatewayAddr, sn, tsk, nonce)
 }
 
 func (gw *Node) IPCGetGenesisEpochForSubnet(ctx context.Context, gatewayAddr address.Address, sn sdk.SubnetID) (abi.ChainEpoch, error) {
 	if err := gw.limit(ctx, basicRateLimitTokens); err != nil {
-		return abi.ChainEpoch{}, err
+		return *new(abi.ChainEpoch), err
 	}
 	return gw.target.IPCGetGenesisEpochForSubnet(ctx, gatewayAddr, sn)
 }
@@ -134,6 +143,9 @@ func (gw *Node) IPCGetCheckpointTemplateSerialized(ctx context.Context, gatewayA
 
 func (gw *Node) IPCGetTopDownMsgsSerialized(ctx context.Context, gatewayAddr address.Address, sn sdk.SubnetID, tsk types.TipSetKey, nonce uint64) ([][]byte, error) {
 	if err := gw.limit(ctx, basicRateLimitTokens); err != nil {
+		return *new([][]byte), err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
 		return *new([][]byte), err
 	}
 	return gw.target.IPCGetTopDownMsgsSerialized(ctx, gatewayAddr, sn, tsk, nonce)
