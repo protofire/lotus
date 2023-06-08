@@ -11,6 +11,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v9/miner"
 	"github.com/filecoin-project/go-state-types/dline"
+	abinetwork "github.com/filecoin-project/go-state-types/network"
 
 	apitypes "github.com/filecoin-project/lotus/api/types"
 	"github.com/filecoin-project/lotus/chain/types"
@@ -33,6 +34,7 @@ import (
 //  * Generate openrpc blobs
 
 type Gateway interface {
+	StateActorCodeCIDs(context.Context, abinetwork.Version) (map[string]cid.Cid, error)
 	ChainHasObj(context.Context, cid.Cid) (bool, error)
 	ChainPutObj(context.Context, blocks.Block) error
 	ChainHead(ctx context.Context) (*types.TipSet, error)

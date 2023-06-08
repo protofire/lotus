@@ -27,6 +27,13 @@ func (gw *Node) Discover(ctx context.Context) (apitypes.OpenRPCDocument, error) 
 	return build.OpenRPCDiscoverJSON_Gateway(), nil
 }
 
+func (gw *Node) StateActorCodeCIDs(ctx context.Context, nv abinetwork.Version) (map[string]cid.Cid, error) {
+	if err := gw.limit(ctx, basicRateLimitTokens); err != nil {
+		return *new(map[string]cid.Cid), err
+	}
+	return gw.target.StateActorCodeCIDs(ctx, nv)
+}
+
 func (gw *Node) Version(ctx context.Context) (api.APIVersion, error) {
 	if err := gw.limit(ctx, basicRateLimitTokens); err != nil {
 		return api.APIVersion{}, err

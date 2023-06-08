@@ -43,6 +43,7 @@ const (
 // TargetAPI defines the API methods that the Node depends on
 // (to make it easy to mock for tests)
 type TargetAPI interface {
+	StateActorCodeCIDs(context.Context, abinetwork.Version) (map[string]cid.Cid, error)
 	Version(context.Context) (api.APIVersion, error)
 	ChainGetParentMessages(context.Context, cid.Cid) ([]api.Message, error)
 	ChainGetParentReceipts(context.Context, cid.Cid) ([]*types.MessageReceipt, error)
