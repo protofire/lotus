@@ -45,7 +45,7 @@ type Gateway interface {
 	IPCGetCheckpointTemplate(ctx context.Context, gatewayAddr address.Address, epoch abi.ChainEpoch) (*gateway.BottomUpCheckpoint, error)
 	IPCListChildSubnets(ctx context.Context, gatewayAddr address.Address) ([]gateway.Subnet, error)
 	IPCHasVotedBottomUpCheckpoint(ctx context.Context, sn sdk.SubnetID, e abi.ChainEpoch, v address.Address) (bool, error)
-	IPCHasVotedTopDownCheckpoint(ctx context.Context, gw address.Address, e abi.ChainEpoch, v address.Address) (bool, error)
+	IPCHasVotedTopDownCheckpoint(ctx context.Context, gatewayAddr address.Address, e abi.ChainEpoch, v address.Address) (bool, error)
 	IPCListCheckpoints(ctx context.Context, sn sdk.SubnetID, from, to abi.ChainEpoch) ([]*gateway.BottomUpCheckpoint, error)
 	IPCGetCheckpoint(ctx context.Context, sn sdk.SubnetID, epoch abi.ChainEpoch) (*gateway.BottomUpCheckpoint, error)
 	IPCGetTopDownMsgs(ctx context.Context, gatewayAddr address.Address, sn sdk.SubnetID, tsk types.TipSetKey, nonce uint64) ([]*gateway.CrossMsg, error)

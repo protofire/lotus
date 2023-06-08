@@ -76,11 +76,11 @@ func (gw *Node) IPCHasVotedBottomUpCheckpoint(ctx context.Context, sn sdk.Subnet
 	return gw.target.IPCHasVotedBottomUpCheckpoint(ctx, sn, e, v)
 }
 
-func (gw *Node) IPCHasVotedTopDownCheckpoint(ctx context.Context, gw address.Address, e abi.ChainEpoch, v address.Address) (bool, error) {
+func (gw *Node) IPCHasVotedTopDownCheckpoint(ctx context.Context, gatewayAddr address.Address, e abi.ChainEpoch, v address.Address) (bool, error) {
 	if err := gw.limit(ctx, basicRateLimitTokens); err != nil {
 		return *new(bool), err
 	}
-	return gw.target.IPCHasVotedTopDownCheckpoint(ctx, gw, e, v)
+	return gw.target.IPCHasVotedTopDownCheckpoint(ctx, gatewayAddr, e, v)
 }
 
 func (gw *Node) IPCListCheckpoints(ctx context.Context, sn sdk.SubnetID, from, to abi.ChainEpoch) ([]*gateway.BottomUpCheckpoint, error) {
