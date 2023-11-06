@@ -156,6 +156,8 @@ type FullNodeMethods struct {
 
 	MarketAddBalance func(p0 context.Context, p1 address.Address, p2 address.Address, p3 types.BigInt) (cid.Cid, error) `perm:"sign"`
 
+
+
 	MarketGetReserved func(p0 context.Context, p1 address.Address) (types.BigInt, error) `perm:"sign"`
 
 	MarketReleaseFunds func(p0 context.Context, p1 address.Address, p2 types.BigInt) error `perm:"sign"`
@@ -308,7 +310,11 @@ type FullNodeMethods struct {
 
 	StateMarketBalance func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (api.MarketBalance, error) `perm:"read"`
 
+	StateMarketParticipants func(p0 context.Context, p1 types.TipSetKey) (map[string]api.MarketBalance, error) ``
+
 	StateMarketDeals func(p0 context.Context, p1 types.TipSetKey) (map[string]*api.MarketDeal, error) `perm:"read"`
+
+	StateMinerAvailableBalance func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) ``
 
 	StateMarketParticipants func(p0 context.Context, p1 types.TipSetKey) (map[string]api.MarketBalance, error) `perm:"read"`
 
@@ -2087,6 +2093,17 @@ func (s *FullNodeStruct) StateMinerPartitions(p0 context.Context, p1 address.Add
 	return s.Internal.StateMinerPartitions(p0, p1, p2, p3)
 }
 
+func (s *GatewayStruct) StateMarketParticipants(p0 context.Context, p1 types.TipSetKey) (map[string]api.MarketBalance, error) {
+	if s.Internal.StateMarketParticipants == nil {
+		return *new(map[string]api.MarketBalance), ErrNotSupported
+	}
+	return s.Internal.StateMarketParticipants(p0, p1)
+}
+
+func (s *GatewayStub) StateMarketParticipants(p0 context.Context, p1 types.TipSetKey) (map[string]api.MarketBalance, error) {
+	return *new(map[string]api.MarketBalance), ErrNotSupported
+}
+
 func (s *FullNodeStub) StateMinerPartitions(p0 context.Context, p1 address.Address, p2 uint64, p3 types.TipSetKey) ([]api.Partition, error) {
 	return *new([]api.Partition), ErrNotSupported
 }
@@ -2903,6 +2920,17 @@ func (s *GatewayStruct) StateMarketStorageDeal(p0 context.Context, p1 abi.DealID
 
 func (s *GatewayStub) StateMarketStorageDeal(p0 context.Context, p1 abi.DealID, p2 types.TipSetKey) (*api.MarketDeal, error) {
 	return nil, ErrNotSupported
+}
+
+func (s *GatewayStruct) StateMinerAvailableBalance(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) {
+	if s.Internal.StateMinerAvailableBalance == nil {
+		return *new(types.BigInt), ErrNotSupported
+	}
+	return s.Internal.StateMinerAvailableBalance(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateMinerAvailableBalance(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) {
+	return *new(types.BigInt), ErrNotSupported
 }
 
 func (s *GatewayStruct) StateMinerInfo(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (api.MinerInfo, error) {
