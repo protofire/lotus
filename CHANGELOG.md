@@ -1,14 +1,20 @@
 # Lotus changelog
 
-# v1.25.1 / 2023-12-09
-
-This is a **highly recommended PATCH RELEASE.**  The patch release fixes the issue were node operators trying to catch up sync were unable to sync large message blocks/epochs due to an increased number of messages on the network.
-
-This patch release allows for up to 10k messages per block. Additionally, it introduces a limit on the amount of data that can be read at once, ensuring the system can handle worst-case scenarios.
+# UNRELEASED
+- chore: Auto remove local chain data when importing chain file or snapshot ([filecoin-project/lotus#11277](https://github.com/filecoin-project/lotus/pull/11277))
+- feat: metric: export Mpool message count ([filecoin-project/lotus#11361](https://github.com/filecoin-project/lotus/pull/11361))
+- feat: sealing: load SectorsSummary from sealing SectorStats instead of calling API each time ([filecoin-project/lotus#11353](https://github.com/filecoin-project/lotus/pull/11353))
+- fix: miner info: Show correct sector state counts ([filecoin-project/lotus#11456](https://github.com/filecoin-project/lotus/pull/11456))
+- feat: add support for specifying block number when calling `eth_estimateGas` RPC number which s
 
 ## Improvements
-- fix: exchange: allow up to 10k messages per block ([filecoin-project/lotus#11506](https://github.com/filecoin-project/lotus/pull/11506))
-
+- fix: Add time slicing to splitstore purging step during compaction to reduce lock congestion [filecoin-project/lotus#11269](https://github.com/filecoin-project/lotus/pull/11269)
+- feat: Added instructions on how to setup Prometheus/Grafana for monitoring a local Lotus node [filecoin-project/lotus#11276](https://github.com/filecoin-project/lotus/pull/11276)
+- fix: Exclude reverted events in `eth_getLogs` results [filecoin-project/lotus#11318](https://github.com/filecoin-project/lotus/pull/11318)
+- fix: The Ethereum API will now use the correct state-tree when resolving "native" addresses into masked ID addresses. Additionally, pending messages from native account types won't be visible in the Ethereum API because there is no "correct" state-tree to pick in this case. However, pending _Ethereum_ transactions and native messages that have landed on-chain will still be visible through the Ethereum API.
+- feat: Unambiguously translate native messages to Ethereum transactions by:
+  - Detecting native messages that "look" like Ethereum transactions (creating smart contracts, invoking a smart contract, etc.), and decoding them as such.
+  - Otherwise, ABI-encoding the inputs as if they were calls to a `handle_filecoin_method` Solidity method.
 
 # v 1.25.0 / 2023-11-22
 
