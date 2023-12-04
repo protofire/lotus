@@ -41,18 +41,10 @@ const (
 	stateRateLimitTokens          = 3
 )
 
-type Partition struct {
-	AllSectors        bitfield.BitField
-	FaultySectors     bitfield.BitField
-	RecoveringSectors bitfield.BitField
-	LiveSectors       bitfield.BitField
-	ActiveSectors     bitfield.BitField
-}
-
 // TargetAPI defines the API methods that the Node depends on
 // (to make it easy to mock for tests)
 type TargetAPI interface {
-	StateMinerPartitions(ctx context.Context, m address.Address, dlIdx uint64, tsk types.TipSetKey) ([]Partition, error)
+	StateMinerPartitions(ctx context.Context, m address.Address, dlIdx uint64, tsk types.TipSetKey) ([]api.Partition, error)
 	StateMinerSectors(context.Context, address.Address, *bitfield.BitField, types.TipSetKey) ([]*miner.SectorOnChainInfo, error)
 	StateMarketParticipants(context.Context, types.TipSetKey) (map[string]api.MarketBalance, error)
 	MpoolPending(context.Context, types.TipSetKey) ([]*types.SignedMessage, error)
