@@ -24,6 +24,14 @@ import (
 	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
 
+type Partition struct {
+	AllSectors        bitfield.BitField
+	FaultySectors     bitfield.BitField
+	RecoveringSectors bitfield.BitField
+	LiveSectors       bitfield.BitField
+	ActiveSectors     bitfield.BitField
+}
+
 func (gw *Node) StateMinerPartitions(ctx context.Context, m address.Address, dlIdx uint64, tsk types.TipSetKey) ([]Partition, error) {
 	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
 		return nil, err

@@ -36,6 +36,14 @@ import (
 //  * Generate markdown docs
 //  * Generate openrpc blobs
 
+type Partition struct {
+	AllSectors        bitfield.BitField
+	FaultySectors     bitfield.BitField
+	RecoveringSectors bitfield.BitField
+	LiveSectors       bitfield.BitField
+	ActiveSectors     bitfield.BitField
+}
+
 type Gateway interface {
 	StateMinerPartitions(ctx context.Context, m address.Address, dlIdx uint64, tsk types.TipSetKey) ([]api.Partition, error)
 	StateMinerSectors(context.Context, address.Address, *bitfield.BitField, types.TipSetKey) ([]*miner.SectorOnChainInfo, error)
