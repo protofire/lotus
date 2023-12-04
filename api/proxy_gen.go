@@ -803,11 +803,15 @@ type GatewayMethods struct {
 
 	StateMinerInfo func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (MinerInfo, error) ``
 
+	StateMinerPartitions func(p0 context.Context, p1 address.Address, p2 uint64, p3 types.TipSetKey) ([]Partition, error) ``
+
 	StateMinerPower func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*MinerPower, error) ``
 
 	StateMinerProvingDeadline func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*dline.Info, error) ``
 
 	StateMinerSectorCount func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (MinerSectors, error) ``
+
+	StateMinerSectors func(p0 context.Context, p1 address.Address, p2 *bitfield.BitField, p3 types.TipSetKey) ([]*miner.SectorOnChainInfo, error) ``
 
 	StateNetworkName func(p0 context.Context) (dtypes.NetworkName, error) ``
 
@@ -5088,6 +5092,17 @@ func (s *GatewayStub) StateMinerInfo(p0 context.Context, p1 address.Address, p2 
 	return *new(MinerInfo), ErrNotSupported
 }
 
+func (s *GatewayStruct) StateMinerPartitions(p0 context.Context, p1 address.Address, p2 uint64, p3 types.TipSetKey) ([]Partition, error) {
+	if s.Internal.StateMinerPartitions == nil {
+		return *new([]Partition), ErrNotSupported
+	}
+	return s.Internal.StateMinerPartitions(p0, p1, p2, p3)
+}
+
+func (s *GatewayStub) StateMinerPartitions(p0 context.Context, p1 address.Address, p2 uint64, p3 types.TipSetKey) ([]Partition, error) {
+	return *new([]Partition), ErrNotSupported
+}
+
 func (s *GatewayStruct) StateMinerPower(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*MinerPower, error) {
 	if s.Internal.StateMinerPower == nil {
 		return nil, ErrNotSupported
@@ -5119,6 +5134,17 @@ func (s *GatewayStruct) StateMinerSectorCount(p0 context.Context, p1 address.Add
 
 func (s *GatewayStub) StateMinerSectorCount(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (MinerSectors, error) {
 	return *new(MinerSectors), ErrNotSupported
+}
+
+func (s *GatewayStruct) StateMinerSectors(p0 context.Context, p1 address.Address, p2 *bitfield.BitField, p3 types.TipSetKey) ([]*miner.SectorOnChainInfo, error) {
+	if s.Internal.StateMinerSectors == nil {
+		return *new([]*miner.SectorOnChainInfo), ErrNotSupported
+	}
+	return s.Internal.StateMinerSectors(p0, p1, p2, p3)
+}
+
+func (s *GatewayStub) StateMinerSectors(p0 context.Context, p1 address.Address, p2 *bitfield.BitField, p3 types.TipSetKey) ([]*miner.SectorOnChainInfo, error) {
+	return *new([]*miner.SectorOnChainInfo), ErrNotSupported
 }
 
 func (s *GatewayStruct) StateNetworkName(p0 context.Context) (dtypes.NetworkName, error) {
