@@ -7,6 +7,15 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/google/uuid"
+	blocks "github.com/ipfs/go-block-format"
+	"github.com/ipfs/go-cid"
+	"github.com/libp2p/go-libp2p/core/metrics"
+	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/protocol"
+	"golang.org/x/xerrors"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-jsonrpc"
@@ -18,6 +27,7 @@ import (
 	"github.com/filecoin-project/go-state-types/dline"
 	abinetwork "github.com/filecoin-project/go-state-types/network"
 	"github.com/filecoin-project/go-state-types/proof"
+
 	apitypes "github.com/filecoin-project/lotus/api/types"
 	builtinactors "github.com/filecoin-project/lotus/chain/actors/builtin"
 	"github.com/filecoin-project/lotus/chain/actors/builtin/miner"
@@ -31,14 +41,6 @@ import (
 	"github.com/filecoin-project/lotus/storage/sealer/fsutil"
 	"github.com/filecoin-project/lotus/storage/sealer/sealtasks"
 	"github.com/filecoin-project/lotus/storage/sealer/storiface"
-	"github.com/google/uuid"
-	"github.com/ipfs/go-cid"
-	blocks "github.com/ipfs/go-libipfs/blocks"
-	"github.com/libp2p/go-libp2p/core/metrics"
-	"github.com/libp2p/go-libp2p/core/network"
-	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/core/protocol"
-	"golang.org/x/xerrors"
 )
 
 var ErrNotSupported = xerrors.New("method not supported")
@@ -738,6 +740,8 @@ type GatewayMethods struct {
 	StateMarketStorageDeal func(p0 context.Context, p1 abi.DealID, p2 types.TipSetKey) (*MarketDeal, error) ``
 
 	StateMinerAvailableBalance func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) ``
+
+	StateMinerDeadlines func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) ([]Deadline, error) ``
 
 	StateMinerFaults func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (bitfield.BitField, error) ``
 
@@ -4698,17 +4702,6 @@ func (s *GatewayStub) StateMarketStorageDeal(p0 context.Context, p1 abi.DealID, 
 	return nil, ErrNotSupported
 }
 
-func (s *GatewayStruct) StateMinerDeadlines(p0 context.Context, p1 address.Address, p2 types.TipSetKey) ([]Deadline, error) {
-	if s.Internal.StateMinerDeadlines == nil {
-		return *new([]Deadline), ErrNotSupported
-	}
-	return s.Internal.StateMinerDeadlines(p0, p1, p2)
-}
-
-func (s *GatewayStub) StateMinerDeadlines(p0 context.Context, p1 address.Address, p2 types.TipSetKey) ([]Deadline, error) {
-	return *new([]Deadline), ErrNotSupported
-}
-
 func (s *GatewayStruct) StateMinerAvailableBalance(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) {
 	if s.Internal.StateMinerAvailableBalance == nil {
 		return *new(types.BigInt), ErrNotSupported
@@ -4718,6 +4711,17 @@ func (s *GatewayStruct) StateMinerAvailableBalance(p0 context.Context, p1 addres
 
 func (s *GatewayStub) StateMinerAvailableBalance(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) {
 	return *new(types.BigInt), ErrNotSupported
+}
+
+func (s *GatewayStruct) StateMinerDeadlines(p0 context.Context, p1 address.Address, p2 types.TipSetKey) ([]Deadline, error) {
+	if s.Internal.StateMinerDeadlines == nil {
+		return *new([]Deadline), ErrNotSupported
+	}
+	return s.Internal.StateMinerDeadlines(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateMinerDeadlines(p0 context.Context, p1 address.Address, p2 types.TipSetKey) ([]Deadline, error) {
+	return *new([]Deadline), ErrNotSupported
 }
 
 func (s *GatewayStruct) StateMinerFaults(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (bitfield.BitField, error) {
