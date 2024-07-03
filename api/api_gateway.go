@@ -35,6 +35,7 @@ import (
 //  * Generate openrpc blobs
 
 type Gateway interface {
+	ChainGetNode(ctx context.Context, p string) (*IpldObject, error)
 	StateMinerPartitions(ctx context.Context, m address.Address, dlIdx uint64, tsk types.TipSetKey) ([]Partition, error)
 	StateMinerSectors(context.Context, address.Address, *bitfield.BitField, types.TipSetKey) ([]*miner.SectorOnChainInfo, error)
 	StateMinerFaults(context.Context, address.Address, types.TipSetKey) (bitfield.BitField, error)

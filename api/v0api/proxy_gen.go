@@ -380,6 +380,8 @@ type GatewayMethods struct {
 
 	ChainGetMessage func(p0 context.Context, p1 cid.Cid) (*types.Message, error) ``
 
+	ChainGetNode func(p0 context.Context, p1 string) (*api.IpldObject, error) ``
+
 	ChainGetTipSet func(p0 context.Context, p1 types.TipSetKey) (*types.TipSet, error) ``
 
 	ChainGetTipSetByHeight func(p0 context.Context, p1 abi.ChainEpoch, p2 types.TipSetKey) (*types.TipSet, error) ``
@@ -2305,6 +2307,17 @@ func (s *GatewayStruct) ChainGetMessage(p0 context.Context, p1 cid.Cid) (*types.
 }
 
 func (s *GatewayStub) ChainGetMessage(p0 context.Context, p1 cid.Cid) (*types.Message, error) {
+	return nil, ErrNotSupported
+}
+
+func (s *GatewayStruct) ChainGetNode(p0 context.Context, p1 string) (*api.IpldObject, error) {
+	if s.Internal.ChainGetNode == nil {
+		return nil, ErrNotSupported
+	}
+	return s.Internal.ChainGetNode(p0, p1)
+}
+
+func (s *GatewayStub) ChainGetNode(p0 context.Context, p1 string) (*api.IpldObject, error) {
 	return nil, ErrNotSupported
 }
 

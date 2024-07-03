@@ -45,6 +45,7 @@ type Partition struct {
 }
 
 type Gateway interface {
+	ChainGetNode(ctx context.Context, p string) (*api.IpldObject, error)
 	StateMinerPartitions(ctx context.Context, m address.Address, dlIdx uint64, tsk types.TipSetKey) ([]api.Partition, error)
 	StateMinerSectors(context.Context, address.Address, *bitfield.BitField, types.TipSetKey) ([]*miner.SectorOnChainInfo, error)
 	StateMinerFaults(context.Context, address.Address, types.TipSetKey) (bitfield.BitField, error)
