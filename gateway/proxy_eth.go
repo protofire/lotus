@@ -18,7 +18,6 @@ import (
 
 	"github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/build"
-	"github.com/filecoin-project/lotus/chain/events/filter"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 )
@@ -434,30 +433,12 @@ func (gw *Node) EthGetFilterChanges(ctx context.Context, id ethtypes.EthFilterID
 		return nil, err
 	}
 
-	ft := statefulCallFromContext(ctx)
-	ft.lk.Lock()
-	_, ok := ft.userFilters[id]
-	ft.lk.Unlock()
-
-	if !ok {
-		return nil, filter.ErrFilterNotFound
-	}
-
 	return gw.target.EthGetFilterChanges(ctx, id)
 }
 
 func (gw *Node) EthGetFilterLogs(ctx context.Context, id ethtypes.EthFilterID) (*ethtypes.EthFilterResult, error) {
 	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
 		return nil, err
-	}
-
-	ft := statefulCallFromContext(ctx)
-	ft.lk.Lock()
-	_, ok := ft.userFilters[id]
-	ft.lk.Unlock()
-
-	if !ok {
-		return nil, nil
 	}
 
 	return gw.target.EthGetFilterLogs(ctx, id)
