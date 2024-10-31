@@ -2,6 +2,7 @@ package itests
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -12,10 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-f3/gpbft"
 	"github.com/filecoin-project/go-f3/manifest"
 	"github.com/filecoin-project/go-state-types/abi"
 
+	lotus_api "github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/chain/lf3"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/itests/kit"
@@ -30,35 +33,43 @@ const (
 )
 
 type testEnv struct {
-	minerFullNodes []*kit.TestFullNode
+	nodes  []*kit.TestFullNode
+	miners []*kit.TestMiner
 	// observer currently not use but may come handy to test certificate exchanges
 	ms      *manifest.ManifestSender
 	m       *manifest.Manifest
 	t       *testing.T
 	testCtx context.Context
+	debug   bool
 }
 
-// Test that checks that F3 is enabled successfully,
-// and miners are able to bootstrap and make progress
+// TestF3_Enabled tests that F3 is enabled successfully, i.e. all miners:
+//   - are able to bootstrap,
+//   - make progress, and
+//   - renew their participation lease after it expires.
 func TestF3_Enabled(t *testing.T) {
 	kit.QuietMiningLogs()
 
-	blocktime := 100 * time.Millisecond
+	const blocktime = 100 * time.Millisecond
 	e := setup(t, blocktime)
-
+	e.waitTillAllMinersParticipate(10 * time.Second)
 	e.waitTillF3Instance(lf3.ParticipationLeaseTerm+1, 40*time.Second)
+	e.requireAllMinersParticipate()
 }
 
-// Test that checks that F3 can be rebootsrapped by changing the manifest
+// TestF3_Rebootstrap tests F3 can be rebootsrapped by changing the manifest
+// without disrupting miner participation.
 func TestF3_Rebootstrap(t *testing.T) {
 	kit.QuietMiningLogs()
 
-	blocktime := 100 * time.Millisecond
+	const blocktime = 100 * time.Millisecond
 	e := setup(t, blocktime)
-	n := e.minerFullNodes[0]
+	e.waitTillAllMinersParticipate(10 * time.Second)
+	n := e.nodes[0]
 
 	newInstance := uint64(2)
 	e.waitTillF3Instance(newInstance, 20*time.Second)
+	e.requireAllMinersParticipate()
 
 	prevCert, err := n.F3GetCertificate(e.testCtx, newInstance)
 	require.NoError(t, err)
@@ -68,30 +79,37 @@ func TestF3_Rebootstrap(t *testing.T) {
 	cpy.NetworkName = BaseNetworkName + "/2"
 	e.ms.UpdateManifest(&cpy)
 
-	newManifest := e.waitTillManifestChange(&cpy, 20*time.Second)
-	require.True(t, newManifest.Equal(&cpy))
+	e.waitTillManifestChange(&cpy, 20*time.Second)
+	e.waitTillAllMinersParticipate(10 * time.Second)
 	e.waitTillF3Rebootstrap(20 * time.Second)
 	e.waitTillF3Instance(prevCert.GPBFTInstance+1, 20*time.Second)
+	e.requireAllMinersParticipate()
 }
 
-// Tests that pause/resume and rebootstrapping F3 works
+// TestF3_PauseAndRebootstrap tests that F3 pause, then resume, then and
+// rebootstrap works as expected, and all miners continue to participate in F3
+// regardless.
 func TestF3_PauseAndRebootstrap(t *testing.T) {
 	kit.QuietMiningLogs()
 
-	blocktime := 100 * time.Millisecond
+	const blocktime = 100 * time.Millisecond
 	e := setup(t, blocktime)
+	e.waitTillAllMinersParticipate(10 * time.Second)
 
 	newInstance := uint64(2)
 	e.waitTillF3Instance(newInstance, 20*time.Second)
+	e.requireAllMinersParticipate()
 
 	origManifest := *e.m
 	pausedManifest := origManifest
 	pausedManifest.Pause = true
 	e.ms.UpdateManifest(&pausedManifest)
 	e.waitTillF3Pauses(30 * time.Second)
+	e.requireAllMinersParticipate() // Pause should not affect participation leasing.
 
 	e.ms.UpdateManifest(&origManifest)
 	e.waitTillF3Runs(30 * time.Second)
+	e.waitTillAllMinersParticipate(10 * time.Second)
 
 	cpy := *e.m
 	cpy.NetworkName = BaseNetworkName + "/2"
@@ -99,36 +117,62 @@ func TestF3_PauseAndRebootstrap(t *testing.T) {
 	e.ms.UpdateManifest(&cpy)
 
 	e.waitTillManifestChange(&cpy, 20*time.Second)
+	e.waitTillAllMinersParticipate(10 * time.Second)
 	e.waitTillF3Rebootstrap(20 * time.Second)
+	e.requireAllMinersParticipate()
 }
 
 // Tests that pause/resume and rebootstrapping F3 works
 func TestF3_Bootstrap(t *testing.T) {
 	kit.QuietMiningLogs()
 
-	var bootstrapEpoch abi.ChainEpoch = 50
-	blocktime := 100 * time.Millisecond
-	staticManif := lf3.NewManifest(BaseNetworkName, DefaultFinality, bootstrapEpoch, blocktime, cid.Undef)
+	const (
+		bootstrapEpoch = 50
+		blocktime      = 100 * time.Millisecond
+	)
+
+	staticManif := newTestManifest(BaseNetworkName, bootstrapEpoch, blocktime)
 	dynamicManif := *staticManif
 	dynamicManif.BootstrapEpoch = 5
 	dynamicManif.EC.Finalize = false
 	dynamicManif.NetworkName = BaseNetworkName + "/1"
 
 	e := setupWithStaticManifest(t, staticManif, true)
+
 	e.ms.UpdateManifest(&dynamicManif)
 	e.waitTillManifestChange(&dynamicManif, 20*time.Second)
+	e.waitTillAllMinersParticipate(10 * time.Second)
 	e.waitTillF3Instance(2, 20*time.Second)
+
 	e.waitTillManifestChange(staticManif, 20*time.Second)
+	e.waitTillAllMinersParticipate(10 * time.Second)
 	e.waitTillF3Instance(2, 20*time.Second)
 
 	// Try to switch back, we should ignore the manifest update.
 	e.ms.UpdateManifest(&dynamicManif)
-	time.Sleep(time.Second)
-	for _, n := range e.minerFullNodes {
+	for _, n := range e.nodes {
 		m, err := n.F3GetManifest(e.testCtx)
 		require.NoError(e.t, err)
 		require.True(t, m.Equal(staticManif))
 	}
+	e.requireAllMinersParticipate()
+}
+
+func TestF3_JsonRPCErrorsPassThrough(t *testing.T) {
+	const blocktime = 100 * time.Millisecond
+	e := setup(t, blocktime, kit.ThroughRPC())
+	n := e.nodes[0].FullNode
+
+	lease, err := n.F3Participate(e.testCtx, []byte("fish"))
+	require.ErrorIs(t, err, lotus_api.ErrF3ParticipationTicketInvalid)
+	require.Zero(t, lease)
+
+	addr, err := address.NewIDAddress(1413)
+	require.NoError(t, err)
+
+	ticket, err := n.F3GetOrRenewParticipationTicket(e.testCtx, addr, nil, 100)
+	require.ErrorIs(t, err, lotus_api.ErrF3ParticipationTooManyInstances)
+	require.Zero(t, ticket)
 }
 
 func (e *testEnv) waitTillF3Rebootstrap(timeout time.Duration) {
@@ -180,21 +224,76 @@ func (e *testEnv) waitTillF3Instance(i uint64, timeout time.Duration) {
 	}, timeout)
 }
 
-func (e *testEnv) waitTillManifestChange(newManifest *manifest.Manifest, timeout time.Duration) (m *manifest.Manifest) {
+func (e *testEnv) waitTillManifestChange(newManifest *manifest.Manifest, timeout time.Duration) {
 	e.waitFor(func(n *kit.TestFullNode) bool {
-		var err error
-		m, err = n.F3GetManifest(e.testCtx)
+		m, err := n.F3GetManifest(e.testCtx)
 		require.NoError(e.t, err)
 		return newManifest.Equal(m)
 	}, timeout)
-	return m
-
 }
+
+func (e *testEnv) waitTillAllMinersParticipate(timeout time.Duration) {
+	e.t.Helper()
+	require.Eventually(e.t, e.allMinersParticipate, timeout, 100*time.Millisecond)
+}
+
+func (e *testEnv) requireAllMinersParticipate() {
+	e.t.Helper()
+	require.True(e.t, e.allMinersParticipate())
+}
+
+func (e *testEnv) allMinersParticipate() bool {
+	e.t.Helper()
+	// Check that:
+	//  1) all miners are participating,
+	//  2) each miner is participating only via one node, and
+	//  3) each node has at least one participant.
+	minerIDs := make(map[uint64]struct{})
+	for _, miner := range e.miners {
+		id, err := address.IDFromAddress(miner.ActorAddr)
+		require.NoError(e.t, err)
+		minerIDs[id] = struct{}{}
+	}
+	for _, n := range e.nodes {
+		participants, err := n.F3ListParticipants(e.testCtx)
+		require.NoError(e.t, err)
+		var foundAtLeastOneMiner bool
+		for _, participant := range participants {
+			if _, found := minerIDs[participant.MinerID]; found {
+				delete(minerIDs, participant.MinerID)
+				foundAtLeastOneMiner = true
+			}
+		}
+		if !foundAtLeastOneMiner {
+			return false
+		}
+	}
+	return len(minerIDs) == 0
+}
+
 func (e *testEnv) waitFor(f func(n *kit.TestFullNode) bool, timeout time.Duration) {
 	e.t.Helper()
 	require.Eventually(e.t, func() bool {
 		e.t.Helper()
-		for _, n := range e.minerFullNodes {
+		defer func() {
+			if e.debug {
+				var wg sync.WaitGroup
+				printProgress := func(index int, n *kit.TestFullNode) {
+					defer wg.Done()
+					if progress, err := n.F3GetProgress(e.testCtx); err != nil {
+						e.t.Logf("Node #%d progress: err: %v", index, err)
+					} else {
+						e.t.Logf("Node #%d progress: %v", index, progress)
+					}
+				}
+				for i, n := range e.nodes {
+					wg.Add(1)
+					go printProgress(i, n)
+				}
+				wg.Wait()
+			}
+		}()
+		for _, n := range e.nodes {
 			if !f(n) {
 				return false
 			}
@@ -208,12 +307,46 @@ func (e *testEnv) waitFor(f func(n *kit.TestFullNode) bool, timeout time.Duratio
 // The first node returned by the function is directly connected to a miner,
 // and the second full-node is an observer that is not directly connected to
 // a miner. The last return value is the manifest sender for the network.
-func setup(t *testing.T, blocktime time.Duration) *testEnv {
-	manif := lf3.NewManifest(BaseNetworkName+"/1", DefaultFinality, DefaultBootstrapEpoch, blocktime, cid.Undef)
-	return setupWithStaticManifest(t, manif, false)
+func setup(t *testing.T, blocktime time.Duration, opts ...kit.NodeOpt) *testEnv {
+	return setupWithStaticManifest(t, newTestManifest(BaseNetworkName+"/1", DefaultBootstrapEpoch, blocktime), false, opts...)
 }
 
-func setupWithStaticManifest(t *testing.T, manif *manifest.Manifest, testBootstrap bool) *testEnv {
+func newTestManifest(networkName gpbft.NetworkName, bootstrapEpoch int64, blocktime time.Duration) *manifest.Manifest {
+	return &manifest.Manifest{
+		ProtocolVersion:   manifest.VersionCapability,
+		BootstrapEpoch:    bootstrapEpoch,
+		NetworkName:       networkName,
+		InitialPowerTable: cid.Undef,
+		CommitteeLookback: manifest.DefaultCommitteeLookback,
+		CatchUpAlignment:  blocktime / 2,
+		Gpbft: manifest.GpbftConfig{
+			// Use smaller time intervals for more responsive test progress/assertion.
+			Delta:                      250 * time.Millisecond,
+			DeltaBackOffExponent:       1.3,
+			MaxLookaheadRounds:         5,
+			RebroadcastBackoffBase:     500 * time.Millisecond,
+			RebroadcastBackoffSpread:   0.1,
+			RebroadcastBackoffExponent: 1.3,
+			RebroadcastBackoffMax:      1 * time.Second,
+		},
+		EC: manifest.EcConfig{
+			Period:                   blocktime,
+			Finality:                 DefaultFinality,
+			DelayMultiplier:          manifest.DefaultEcConfig.DelayMultiplier,
+			BaseDecisionBackoffTable: manifest.DefaultEcConfig.BaseDecisionBackoffTable,
+			HeadLookback:             0,
+			Finalize:                 true,
+		},
+		CertificateExchange: manifest.CxConfig{
+			ClientRequestTimeout: manifest.DefaultCxConfig.ClientRequestTimeout,
+			ServerRequestTimeout: manifest.DefaultCxConfig.ServerRequestTimeout,
+			MinimumPollInterval:  blocktime,
+			MaximumPollInterval:  4 * blocktime,
+		},
+	}
+}
+
+func setupWithStaticManifest(t *testing.T, manif *manifest.Manifest, testBootstrap bool, extraOpts ...kit.NodeOpt) *testEnv {
 	ctx, stopServices := context.WithCancel(context.Background())
 	errgrp, ctx := errgroup.WithContext(ctx)
 
@@ -236,8 +369,10 @@ func setupWithStaticManifest(t *testing.T, manif *manifest.Manifest, testBootstr
 		AllowDynamicFinalize:     !testBootstrap,
 	}
 
-	f3NOpt := kit.F3Enabled(cfg)
-	f3MOpt := kit.ConstructorOpts(node.Override(node.F3Participation, modules.F3Participation))
+	nodeOpts := []kit.NodeOpt{kit.WithAllSubsystems(), kit.F3Enabled(cfg)}
+	nodeOpts = append(nodeOpts, extraOpts...)
+	minerOpts := []kit.NodeOpt{kit.WithAllSubsystems(), kit.ConstructorOpts(node.Override(node.F3Participation, modules.F3Participation))}
+	minerOpts = append(minerOpts, extraOpts...)
 
 	var (
 		n1, n2, n3     kit.TestFullNode
@@ -245,13 +380,13 @@ func setupWithStaticManifest(t *testing.T, manif *manifest.Manifest, testBootstr
 	)
 
 	ens := kit.NewEnsemble(t, kit.MockProofs()).
-		FullNode(&n1, kit.WithAllSubsystems(), f3NOpt).
-		FullNode(&n2, kit.WithAllSubsystems(), f3NOpt).
-		FullNode(&n3, kit.WithAllSubsystems(), f3NOpt).
-		Miner(&m1, &n1, kit.WithAllSubsystems(), f3MOpt).
-		Miner(&m2, &n2, kit.WithAllSubsystems(), f3MOpt).
-		Miner(&m3, &n3, kit.WithAllSubsystems(), f3MOpt).
-		Miner(&m4, &n3, kit.WithAllSubsystems(), f3MOpt).
+		FullNode(&n1, nodeOpts...).
+		FullNode(&n2, nodeOpts...).
+		FullNode(&n3, nodeOpts...).
+		Miner(&m1, &n1, minerOpts...).
+		Miner(&m2, &n2, minerOpts...).
+		Miner(&m3, &n3, minerOpts...).
+		Miner(&m4, &n3, minerOpts...).
 		Start()
 
 	ens.InterconnectAll().BeginMining(blocktime)
@@ -262,20 +397,17 @@ func setupWithStaticManifest(t *testing.T, manif *manifest.Manifest, testBootstr
 		cancel()
 	}
 
-	m, err := n1.F3GetManifest(ctx)
-	require.NoError(t, err)
-
-	e := &testEnv{m: m, t: t, testCtx: context.Background()}
+	e := &testEnv{m: manif, t: t, testCtx: ctx}
 	// in case we want to use more full-nodes in the future
-	e.minerFullNodes = []*kit.TestFullNode{&n1, &n2, &n3}
+	e.nodes = []*kit.TestFullNode{&n1, &n2, &n3}
+	e.miners = []*kit.TestMiner{&m1, &m2, &m3, &m4}
 
 	// create manifest sender and connect to full-nodes
-	e.ms = e.newManifestSender(context.Background(), t, manifestServerHost, blocktime)
-	for _, n := range e.minerFullNodes {
+	e.ms = e.newManifestSender(ctx, t, manifestServerHost, blocktime)
+	for _, n := range e.nodes {
 		err = n.NetConnect(ctx, e.ms.PeerInfo())
 		require.NoError(t, err)
 	}
-
 	errgrp.Go(func() error {
 		defer func() {
 			require.NoError(t, manifestServerHost.Close())
