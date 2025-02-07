@@ -764,6 +764,8 @@ type GatewayMethods struct {
 
 	StateCall func(p0 context.Context, p1 *types.Message, p2 types.TipSetKey) (*InvocResult, error) ``
 
+	StateChangedActors func(p0 context.Context, p1 cid.Cid, p2 cid.Cid) (map[string]types.Actor, error) `perm:"read"`
+
 	StateDealProviderCollateralBounds func(p0 context.Context, p1 abi.PaddedPieceSize, p2 bool, p3 types.TipSetKey) (DealCollateralBounds, error) ``
 
 	StateDecodeParams func(p0 context.Context, p1 address.Address, p2 abi.MethodNum, p3 []byte, p4 types.TipSetKey) (interface{}, error) ``
@@ -4864,6 +4866,17 @@ func (s *GatewayStruct) StateCall(p0 context.Context, p1 *types.Message, p2 type
 
 func (s *GatewayStub) StateCall(p0 context.Context, p1 *types.Message, p2 types.TipSetKey) (*InvocResult, error) {
 	return nil, ErrNotSupported
+}
+
+func (s *GatewayStruct) StateChangedActors(p0 context.Context, p1 cid.Cid, p2 cid.Cid) (map[string]types.Actor, error) {
+	if s.Internal.StateChangedActors == nil {
+		return *new(map[string]types.Actor), ErrNotSupported
+	}
+	return s.Internal.StateChangedActors(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateChangedActors(p0 context.Context, p1 cid.Cid, p2 cid.Cid) (map[string]types.Actor, error) {
+	return *new(map[string]types.Actor), ErrNotSupported
 }
 
 func (s *GatewayStruct) StateDealProviderCollateralBounds(p0 context.Context, p1 abi.PaddedPieceSize, p2 bool, p3 types.TipSetKey) (DealCollateralBounds, error) {
