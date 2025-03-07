@@ -683,3 +683,13 @@ func (gw *Node) StateChangedActors(ctx context.Context, c1 cid.Cid, c2 cid.Cid) 
 	}
 	return gw.target.StateChangedActors(ctx, c1, c2)
 }
+
+func (gw *Node) StateLookupRobustAddress(ctx context.Context, addr address.Address, tsk types.TipSetKey) (address.Address, error) {
+	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
+		return address.Address{}, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return address.Address{}, err
+	}
+	return gw.target.StateLookupRobustAddress(ctx, addr, tsk)
+}
