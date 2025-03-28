@@ -766,6 +766,8 @@ type GatewayMethods struct {
 
 	StateCall func(p0 context.Context, p1 *types.Message, p2 types.TipSetKey) (*InvocResult, error) ``
 
+	StateChangedActors func(p0 context.Context, p1 cid.Cid, p2 cid.Cid) (map[string]types.Actor, error) ``
+
 	StateDealProviderCollateralBounds func(p0 context.Context, p1 abi.PaddedPieceSize, p2 bool, p3 types.TipSetKey) (DealCollateralBounds, error) ``
 
 	StateDecodeParams func(p0 context.Context, p1 address.Address, p2 abi.MethodNum, p3 []byte, p4 types.TipSetKey) (interface{}, error) ``
@@ -788,9 +790,13 @@ type GatewayMethods struct {
 
 	StateLookupID func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (address.Address, error) ``
 
+	StateLookupRobustAddress func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (address.Address, error) ``
+
 	StateMarketBalance func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (MarketBalance, error) ``
 
 	StateMarketStorageDeal func(p0 context.Context, p1 abi.DealID, p2 types.TipSetKey) (*MarketDeal, error) ``
+
+	StateMinerAvailableBalance func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) ``
 
 	StateMinerDeadlines func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) ([]Deadline, error) ``
 
@@ -4879,6 +4885,17 @@ func (s *GatewayStub) StateCall(p0 context.Context, p1 *types.Message, p2 types.
 	return nil, ErrNotSupported
 }
 
+func (s *GatewayStruct) StateChangedActors(p0 context.Context, p1 cid.Cid, p2 cid.Cid) (map[string]types.Actor, error) {
+	if s.Internal.StateChangedActors == nil {
+		return *new(map[string]types.Actor), ErrNotSupported
+	}
+	return s.Internal.StateChangedActors(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateChangedActors(p0 context.Context, p1 cid.Cid, p2 cid.Cid) (map[string]types.Actor, error) {
+	return *new(map[string]types.Actor), ErrNotSupported
+}
+
 func (s *GatewayStruct) StateDealProviderCollateralBounds(p0 context.Context, p1 abi.PaddedPieceSize, p2 bool, p3 types.TipSetKey) (DealCollateralBounds, error) {
 	if s.Internal.StateDealProviderCollateralBounds == nil {
 		return *new(DealCollateralBounds), ErrNotSupported
@@ -5000,6 +5017,17 @@ func (s *GatewayStub) StateLookupID(p0 context.Context, p1 address.Address, p2 t
 	return *new(address.Address), ErrNotSupported
 }
 
+func (s *GatewayStruct) StateLookupRobustAddress(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (address.Address, error) {
+	if s.Internal.StateLookupRobustAddress == nil {
+		return *new(address.Address), ErrNotSupported
+	}
+	return s.Internal.StateLookupRobustAddress(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateLookupRobustAddress(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (address.Address, error) {
+	return *new(address.Address), ErrNotSupported
+}
+
 func (s *GatewayStruct) StateMarketBalance(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (MarketBalance, error) {
 	if s.Internal.StateMarketBalance == nil {
 		return *new(MarketBalance), ErrNotSupported
@@ -5020,6 +5048,17 @@ func (s *GatewayStruct) StateMarketStorageDeal(p0 context.Context, p1 abi.DealID
 
 func (s *GatewayStub) StateMarketStorageDeal(p0 context.Context, p1 abi.DealID, p2 types.TipSetKey) (*MarketDeal, error) {
 	return nil, ErrNotSupported
+}
+
+func (s *GatewayStruct) StateMinerAvailableBalance(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) {
+	if s.Internal.StateMinerAvailableBalance == nil {
+		return *new(types.BigInt), ErrNotSupported
+	}
+	return s.Internal.StateMinerAvailableBalance(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateMinerAvailableBalance(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) {
+	return *new(types.BigInt), ErrNotSupported
 }
 
 func (s *GatewayStruct) StateMinerDeadlines(p0 context.Context, p1 address.Address, p2 types.TipSetKey) ([]Deadline, error) {
