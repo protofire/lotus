@@ -119,6 +119,9 @@ lotus-gateway: $(BUILD_DEPS)  ## Build the Lotus gateway
 .PHONY: lotus-gateway
 BINS+=lotus-gateway
 
+lotus-gateway-calibnet: GOFLAGS+=-tags=calibnet
+lotus-gateway-calibnet: lotus-gateway  ## Build for calibnet network
+
 build: lotus lotus-miner lotus-worker  ## Build all main binaries
 	@[[ $$(type -P "lotus") ]] && echo "Caution: you have \
 an existing lotus binary in your PATH. This may cause problems if you don't run 'sudo make install'" || true
