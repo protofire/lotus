@@ -707,3 +707,13 @@ func (gw *Node) StateLookupRobustAddress(ctx context.Context, addr address.Addre
 	}
 	return gw.target.StateLookupRobustAddress(ctx, addr, tsk)
 }
+
+func (gw *Node) StateVerifiedRegistryRootKey(ctx context.Context, tsk types.TipSetKey) (address.Address, error) {
+	if err := gw.limit(ctx, stateRateLimitTokens); err != nil {
+		return address.Address{}, err
+	}
+	if err := gw.checkTipsetKey(ctx, tsk); err != nil {
+		return address.Address{}, err
+	}
+	return gw.target.StateVerifiedRegistryRootKey(ctx, tsk)
+}

@@ -52,6 +52,7 @@ const (
 // TargetAPI defines the API methods that the Node depends on
 // (to make it easy to mock for tests)
 type TargetAPI interface {
+	StateVerifiedRegistryRootKey(ctx context.Context, tsk types.TipSetKey) (address.Address, error) //perm:read
 	StateLookupRobustAddress(context.Context, address.Address, types.TipSetKey) (address.Address, error)
 	StateChangedActors(context.Context, cid.Cid, cid.Cid) (map[string]types.Actor, error)
 	MpoolPending(context.Context, types.TipSetKey) ([]*types.SignedMessage, error)

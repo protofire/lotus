@@ -822,6 +822,8 @@ type GatewayMethods struct {
 
 	StateVerifiedClientStatus func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*abi.StoragePower, error) ``
 
+	StateVerifiedRegistryRootKey func(p0 context.Context, p1 types.TipSetKey) (address.Address, error) `perm:"read"`
+
 	StateVerifierStatus func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*abi.StoragePower, error) ``
 
 	StateWaitMsg func(p0 context.Context, p1 cid.Cid, p2 uint64, p3 abi.ChainEpoch, p4 bool) (*MsgLookup, error) ``
@@ -5191,6 +5193,17 @@ func (s *GatewayStruct) StateVerifiedClientStatus(p0 context.Context, p1 address
 
 func (s *GatewayStub) StateVerifiedClientStatus(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*abi.StoragePower, error) {
 	return nil, ErrNotSupported
+}
+
+func (s *GatewayStruct) StateVerifiedRegistryRootKey(p0 context.Context, p1 types.TipSetKey) (address.Address, error) {
+	if s.Internal.StateVerifiedRegistryRootKey == nil {
+		return *new(address.Address), ErrNotSupported
+	}
+	return s.Internal.StateVerifiedRegistryRootKey(p0, p1)
+}
+
+func (s *GatewayStub) StateVerifiedRegistryRootKey(p0 context.Context, p1 types.TipSetKey) (address.Address, error) {
+	return *new(address.Address), ErrNotSupported
 }
 
 func (s *GatewayStruct) StateVerifierStatus(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (*abi.StoragePower, error) {
