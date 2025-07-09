@@ -4,6 +4,7 @@
 package buildconstants
 
 import (
+	_ "embed"
 	"math"
 	"os"
 	"strconv"
@@ -197,6 +198,8 @@ var F3ManifestServerID = MustParseID("12D3KooWENMwUF9YxvQxar7uBWJtZkA6amvK4xWmKX
 var F3InitialPowerTableCID = cid.MustParse("bafy2bzacecklgxd2eksmodvhgurqvorkg3wamgqkrunir3al2gchv2cikgmbu")
 
 const F3Enabled = true
-const F3BootstrapEpoch abi.ChainEpoch = -1
 
 var F3ParamsAddress = "0xA19080A1Bcb82Bb61bcb9691EC94653Eb5315716"
+
+//go:embed f3manifest_mainnet.json
+var F3ManifestBytes []byte
