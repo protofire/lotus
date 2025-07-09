@@ -682,7 +682,7 @@ func (pv1 *reverseProxyV1) StateLookupRobustAddress(ctx context.Context, addr ad
 	if err := pv1.gateway.limit(ctx, stateRateLimitTokens); err != nil {
 		return address.Address{}, err
 	}
-	if err := pv1.gateway.checkTipsetKey(ctx, tsk); err != nil {
+	if err := pv1.gateway.checkTipSetKey(ctx, tsk); err != nil {
 		return address.Address{}, err
 	}
 	return pv1.server.StateLookupRobustAddress(ctx, addr, tsk)
@@ -692,8 +692,8 @@ func (pv1 *reverseProxyV1) StateVerifiedRegistryRootKey(ctx context.Context, tsk
 	if err := pv1.gateway.limit(ctx, stateRateLimitTokens); err != nil {
 		return address.Address{}, err
 	}
-	if err := pv1.gateway.checkTipsetKey(ctx, tsk); err != nil {
+	if err := pv1.gateway.checkTipSetKey(ctx, tsk); err != nil {
 		return address.Address{}, err
 	}
-	return gw.server.StateVerifiedRegistryRootKey(ctx, tsk)
+	return pv1.server.StateVerifiedRegistryRootKey(ctx, tsk)
 }
