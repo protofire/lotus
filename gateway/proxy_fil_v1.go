@@ -677,3 +677,23 @@ func (pv1 *reverseProxyV1) F3GetLatestCertificate(ctx context.Context) (*certs.F
 	}
 	return pv1.server.F3GetLatestCertificate(ctx)
 }
+
+func (pv1 *reverseProxyV1) StateLookupRobustAddress(ctx context.Context, addr address.Address, tsk types.TipSetKey) (address.Address, error) {
+	if err := pv1.gateway.limit(ctx, stateRateLimitTokens); err != nil {
+		return address.Address{}, err
+	}
+	if err := pv1.gateway.checkTipsetKey(ctx, tsk); err != nil {
+		return address.Address{}, err
+	}
+	return pv1.server.StateLookupRobustAddress(ctx, addr, tsk)
+}
+
+func (pv1 *reverseProxyV1) StateVerifiedRegistryRootKey(ctx context.Context, tsk types.TipSetKey) (address.Address, error) {
+	if err := pv1.gateway.limit(ctx, stateRateLimitTokens); err != nil {
+		return address.Address{}, err
+	}
+	if err := pv1.gateway.checkTipsetKey(ctx, tsk); err != nil {
+		return address.Address{}, err
+	}
+	return gw.server.StateVerifiedRegistryRootKey(ctx, tsk)
+}
