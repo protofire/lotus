@@ -159,6 +159,13 @@ func (pv1 *reverseProxyV1) ChainGetTipSet(ctx context.Context, tsk types.TipSetK
 	return pv1.server.ChainGetTipSet(ctx, tsk)
 }
 
+func (gw *Node) StateChangedActors(ctx context.Context, c1 cid.Cid, c2 cid.Cid) (map[string]types.Actor, error) {
+	if err := gw.limit(ctx, chainRateLimitTokens); err != nil {
+		return nil, err
+	}
+	return gw.target.StateChangedActors(ctx, c1, c2)
+}
+
 func (pv1 *reverseProxyV1) ChainGetTipSetByHeight(ctx context.Context, h abi.ChainEpoch, tsk types.TipSetKey) (*types.TipSet, error) {
 	if err := pv1.gateway.limit(ctx, chainRateLimitTokens); err != nil {
 		return nil, err
