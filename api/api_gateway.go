@@ -35,6 +35,10 @@ import (
 //  * Generate openrpc blobs
 
 type Gateway interface {
+	StateVerifiedRegistryRootKey(ctx context.Context, tsk types.TipSetKey) (address.Address, error) //perm:read
+	StateLookupRobustAddress(context.Context, address.Address, types.TipSetKey) (address.Address, error)
+	StateChangedActors(context.Context, cid.Cid, cid.Cid) (map[string]types.Actor, error)
+	StateMinerAvailableBalance(context.Context, address.Address, types.TipSetKey) (types.BigInt, error)
 	ChainGetBlock(context.Context, cid.Cid) (*types.BlockHeader, error)
 	ChainHasObj(context.Context, cid.Cid) (bool, error)
 	ChainPutObj(context.Context, blocks.Block) error
