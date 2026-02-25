@@ -696,3 +696,30 @@ func (pv1 *reverseProxyV1) F3GetLatestCertificate(ctx context.Context) (*certs.F
 	}
 	return pv1.server.F3GetLatestCertificate(ctx)
 }
+
+func (pv1 *reverseProxyV1) StateChangedActors(ctx context.Context, c1 cid.Cid, c2 cid.Cid) (map[string]types.Actor, error) {
+	if err := pv1.gateway.limit(ctx, chainRateLimitTokens); err != nil {
+		return nil, err
+	}
+	return pv1.server.StateChangedActors(ctx, c1, c2)
+}
+
+func (pv1 *reverseProxyV1) StateLookupRobustAddress(ctx context.Context, addr address.Address, tsk types.TipSetKey) (address.Address, error) {
+	if err := pv1.gateway.limit(ctx, stateRateLimitTokens); err != nil {
+		return address.Address{}, err
+	}
+	if err := pv1.gateway.checkTipSetKey(ctx, tsk); err != nil {
+		return address.Address{}, err
+	}
+	return pv1.server.StateLookupRobustAddress(ctx, addr, tsk)
+}
+
+func (pv1 *reverseProxyV1) StateVerifiedRegistryRootKey(ctx context.Context, tsk types.TipSetKey) (address.Address, error) {
+	if err := pv1.gateway.limit(ctx, stateRateLimitTokens); err != nil {
+		return address.Address{}, err
+	}
+	if err := pv1.gateway.checkTipSetKey(ctx, tsk); err != nil {
+		return address.Address{}, err
+	}
+	return pv1.server.StateVerifiedRegistryRootKey(ctx, tsk)
+}
