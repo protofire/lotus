@@ -724,3 +724,13 @@ func (pv1 *reverseProxyV1) StateVerifiedRegistryRootKey(ctx context.Context, tsk
 	}
 	return pv1.server.StateVerifiedRegistryRootKey(ctx, tsk)
 }
+
+func (pv1 *reverseProxyV1) StateSectorPartition(ctx context.Context, maddr address.Address, sectorNumber abi.SectorNumber, tok types.TipSetKey) (*miner.SectorLocation, error) {
+	if err := pv1.gateway.limit(ctx, stateRateLimitTokens); err != nil {
+		return nil, err
+	}
+	if err := pv1.gateway.checkTipSetKey(ctx, tok); err != nil {
+		return nil, err
+	}
+	return pv1.server.StateSectorPartition(ctx, maddr, sectorNumber, tok)
+}
