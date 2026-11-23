@@ -7,19 +7,13 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-jsonrpc"
-	"github.com/filecoin-project/go-state-types/abi"
 
 	apitypes "github.com/filecoin-project/lotus/api/types"
-	"github.com/filecoin-project/lotus/chain/actors/builtin/miner"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 )
 
 type Gateway interface {
-	StateSectorPartition(ctx context.Context, maddr address.Address, sectorNumber abi.SectorNumber, tok types.TipSetKey) (*miner.SectorLocation, error)
-	StateVerifiedRegistryRootKey(ctx context.Context, tsk types.TipSetKey) (address.Address, error)
-	StateChangedActors(context.Context, cid.Cid, cid.Cid) (map[string]types.Actor, error)
-	StateMinerAvailableBalance(context.Context, address.Address, types.TipSetKey) (types.BigInt, error)
 	ChainGetTipSet(context.Context, types.TipSetSelector) (*types.TipSet, error)
 	ChainGetTipSetFinalityStatus(context.Context) (*types.FinalityStatus, error)
 	StateGetActor(context.Context, address.Address, types.TipSetSelector) (*types.Actor, error)
