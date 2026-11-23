@@ -13,6 +13,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 
 	apitypes "github.com/filecoin-project/lotus/api/types"
+	"github.com/filecoin-project/lotus/chain/actors/builtin/miner"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 )
@@ -235,11 +236,19 @@ type GatewayMethods struct {
 
 	NetVersion func(p0 context.Context) (string, error) ``
 
+	StateChangedActors func(p0 context.Context, p1 cid.Cid, p2 cid.Cid) (map[string]types.Actor, error) ``
+
 	StateGetActor func(p0 context.Context, p1 address.Address, p2 types.TipSetSelector) (*types.Actor, error) ``
 
 	StateGetID func(p0 context.Context, p1 address.Address, p2 types.TipSetSelector) (*address.Address, error) ``
 
+	StateMinerAvailableBalance func(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) ``
+
 	StateRewardDistribution func(p0 context.Context, p1 types.TipSetSelector) (*RewardDistribution, error) ``
+
+	StateSectorPartition func(p0 context.Context, p1 address.Address, p2 abi.SectorNumber, p3 types.TipSetKey) (*miner.SectorLocation, error) ``
+
+	StateVerifiedRegistryRootKey func(p0 context.Context, p1 types.TipSetKey) (address.Address, error) ``
 
 	Web3ClientVersion func(p0 context.Context) (string, error) ``
 }
@@ -1358,6 +1367,17 @@ func (s *GatewayStub) NetVersion(p0 context.Context) (string, error) {
 	return "", ErrNotSupported
 }
 
+func (s *GatewayStruct) StateChangedActors(p0 context.Context, p1 cid.Cid, p2 cid.Cid) (map[string]types.Actor, error) {
+	if s.Internal.StateChangedActors == nil {
+		return *new(map[string]types.Actor), ErrNotSupported
+	}
+	return s.Internal.StateChangedActors(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateChangedActors(p0 context.Context, p1 cid.Cid, p2 cid.Cid) (map[string]types.Actor, error) {
+	return *new(map[string]types.Actor), ErrNotSupported
+}
+
 func (s *GatewayStruct) StateGetActor(p0 context.Context, p1 address.Address, p2 types.TipSetSelector) (*types.Actor, error) {
 	if s.Internal.StateGetActor == nil {
 		return nil, ErrNotSupported
@@ -1380,6 +1400,17 @@ func (s *GatewayStub) StateGetID(p0 context.Context, p1 address.Address, p2 type
 	return nil, ErrNotSupported
 }
 
+func (s *GatewayStruct) StateMinerAvailableBalance(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) {
+	if s.Internal.StateMinerAvailableBalance == nil {
+		return *new(types.BigInt), ErrNotSupported
+	}
+	return s.Internal.StateMinerAvailableBalance(p0, p1, p2)
+}
+
+func (s *GatewayStub) StateMinerAvailableBalance(p0 context.Context, p1 address.Address, p2 types.TipSetKey) (types.BigInt, error) {
+	return *new(types.BigInt), ErrNotSupported
+}
+
 func (s *GatewayStruct) StateRewardDistribution(p0 context.Context, p1 types.TipSetSelector) (*RewardDistribution, error) {
 	if s.Internal.StateRewardDistribution == nil {
 		return nil, ErrNotSupported
@@ -1389,6 +1420,28 @@ func (s *GatewayStruct) StateRewardDistribution(p0 context.Context, p1 types.Tip
 
 func (s *GatewayStub) StateRewardDistribution(p0 context.Context, p1 types.TipSetSelector) (*RewardDistribution, error) {
 	return nil, ErrNotSupported
+}
+
+func (s *GatewayStruct) StateSectorPartition(p0 context.Context, p1 address.Address, p2 abi.SectorNumber, p3 types.TipSetKey) (*miner.SectorLocation, error) {
+	if s.Internal.StateSectorPartition == nil {
+		return nil, ErrNotSupported
+	}
+	return s.Internal.StateSectorPartition(p0, p1, p2, p3)
+}
+
+func (s *GatewayStub) StateSectorPartition(p0 context.Context, p1 address.Address, p2 abi.SectorNumber, p3 types.TipSetKey) (*miner.SectorLocation, error) {
+	return nil, ErrNotSupported
+}
+
+func (s *GatewayStruct) StateVerifiedRegistryRootKey(p0 context.Context, p1 types.TipSetKey) (address.Address, error) {
+	if s.Internal.StateVerifiedRegistryRootKey == nil {
+		return *new(address.Address), ErrNotSupported
+	}
+	return s.Internal.StateVerifiedRegistryRootKey(p0, p1)
+}
+
+func (s *GatewayStub) StateVerifiedRegistryRootKey(p0 context.Context, p1 types.TipSetKey) (address.Address, error) {
+	return *new(address.Address), ErrNotSupported
 }
 
 func (s *GatewayStruct) Web3ClientVersion(p0 context.Context) (string, error) {
